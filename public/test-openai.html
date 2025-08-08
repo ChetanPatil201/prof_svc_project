@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure OpenAI API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; white-space: pre-wrap; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Azure OpenAI API Test</h1>
+    <button onclick="testDebug()">Test Debug Endpoint</button>
+    <button onclick="testOpenAI()">Test Azure OpenAI API</button>
+    <button onclick="testAssessmentForm()">Test Assessment Form API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testDebug() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing debug endpoint...';
+            
+            try {
+                const response = await fetch('/api/debug');
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">Debug Endpoint Response:</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testOpenAI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing Azure OpenAI API...';
+            
+            try {
+                const response = await fetch('/api/test-openai');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<div class="success">Azure OpenAI API Test Success:</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Azure OpenAI API Test Failed:</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAssessmentForm() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing Assessment Form API...';
+            
+            try {
+                const response = await fetch('/api/azure-openai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: 'Generate a simple test response.',
+                        options: {
+                            temperature: 0,
+                            maxTokens: 100
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `<div class="error">Assessment Form API Failed (${response.status}):</div><pre>${errorText}</pre>`;
+                } else {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">Assessment Form API Success:</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html> 

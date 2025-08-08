@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { AssessmentReportData } from '@/types/assessmentReport';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
-import { generateCostComparisonTable, generateCostComparisonTableData, generateComputeBreakdownData, generateDiskBreakdownData } from '@/lib/utils';
+import { generateCostComparisonTable, generateCostComparisonTableData, generateComputeBreakdownData, generateDiskBreakdownData, getConstrainedDiskData, testDiskConstraintApplication } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +18,15 @@ export async function POST(req: NextRequest) {
     }
     
     const data: AssessmentReportData = JSON.parse(reportDataJson);
+
+    // Test disk constraint application
+    await testDiskConstraintApplication(data);
+
+    // Apply disk constraints to original data for consistency across all report sections
+    if (data.rulesAndConstraints && data.payAsYouGoData?.disks && data.targetRegion) {
+      console.log("🔄 [Generate Report] Ensuring disk constraints are applied consistently");
+      data.payAsYouGoData.disks = await getConstrainedDiskData(data);
+    }
 
     // Calculate missing fields if undefined
     let windowsServers = data.windowsServers;
@@ -44,19 +53,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate cost comparison table
-    const costComparisonTableData = generateCostComparisonTable(data);
+    const costComparisonTableData = await generateCostComparisonTable(data);
     const structuredTableData = generateCostComparisonTableData(costComparisonTableData);
     
     // Generate compute breakdown data
-    const computeBreakdownData = generateComputeBreakdownData(data);
+    const computeBreakdownData = await generateComputeBreakdownData(data);
     
     // Generate disk breakdown data
-    console.log('💿 [Generate Report] Generating disk breakdown data');
-    const diskBreakdownData = generateDiskBreakdownData(data);
-    console.log('✅ [Generate Report] Disk breakdown completed:', {
-      diskCount: diskBreakdownData.disks.length,
-      totalCost: diskBreakdownData.totalStorageCost
-    });
+    const diskBreakdownData = await generateDiskBreakdownData(data);
 
     // Use these values in the template
     const templateData = {

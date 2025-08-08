@@ -1,0 +1,98 @@
+name: Deploy to Azure Container Instances
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  ACR_NAME: profsvcregistry
+  CONTAINER_NAME: prof-svc-container
+  RESOURCE_GROUP: prof-svc-rg
+  LOCATION: eastus
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Create resource group
+      run: |
+        az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+    
+    - name: Create Azure Container Registry
+      run: |
+        az acr create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.ACR_NAME }} \
+          --sku Basic \
+          --admin-enabled true
+      continue-on-error: true
+    
+    - name: Build and push Docker image
+      run: |
+        az acr build \
+          --registry ${{ env.ACR_NAME }} \
+          --image prof-svc-app:${{ github.sha }} \
+          --file Dockerfile \
+          .
+    
+    - name: Deploy to Azure Container Instances
+      run: |
+        # Get ACR credentials
+        ACR_LOGIN_SERVER=$(az acr show --name ${{ env.ACR_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query "loginServer" --output tsv)
+        ACR_USERNAME=$(az acr credential show --name ${{ env.ACR_NAME }} --query "username" --output tsv)
+        ACR_PASSWORD=$(az acr credential show --name ${{ env.ACR_NAME }} --query "passwords[0].value" --output tsv)
+        
+        # Delete existing container if it exists
+        az container delete \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.CONTAINER_NAME }} \
+          --yes \
+          --query "id" || true
+        
+        # Create new container instance
+        az container create \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.CONTAINER_NAME }} \
+          --image $ACR_LOGIN_SERVER/prof-svc-app:${{ github.sha }} \
+          --registry-login-server $ACR_LOGIN_SERVER \
+          --registry-username $ACR_USERNAME \
+          --registry-password $ACR_PASSWORD \
+          --dns-name-label ${{ env.CONTAINER_NAME }} \
+          --ports 3000 \
+          --environment-variables \
+            NODE_ENV=production \
+            PORT=3000 \
+            HOSTNAME=0.0.0.0 \
+          --cpu 1 \
+          --memory 1.5
+    
+    - name: Get deployment URL
+      run: |
+        PUBLIC_IP=$(az container show \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --name ${{ env.CONTAINER_NAME }} \
+          --query "ipAddress.ip" --output tsv)
+        echo "🌐 Your app is available at: http://$PUBLIC_IP:3000"
+        echo "DEPLOYMENT_URL=http://$PUBLIC_IP:3000" >> $GITHUB_ENV 

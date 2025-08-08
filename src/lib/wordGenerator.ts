@@ -7,26 +7,26 @@ export async function generateAssessmentReport(data: AssessmentReportData): Prom
   const { sections } = ASSESSMENT_REPORT_TEMPLATE;
   
   // Replace placeholders with actual data
-  let executiveSummaryContent = sections.executiveSummary.content
+  const executiveSummaryContent = sections.executiveSummary.content
     .replace('{totalServers}', data.totalServers.toString())
-    .replace('{inScopeServers}', data.inScopeServers.toString())
+    .replace('{inScopeServers}', (data.inScopeServers ?? 0).toString())
     .replace('{readinessSummary}', data.readinessSummary)
     .replace('{costAnalysis}', data.costAnalysis)
     .replace('{recommendations}', data.recommendations);
 
-  let cloudDiscoveryContent = sections.cloudDiscovery.content
+  const cloudDiscoveryContent = sections.cloudDiscovery.content
     .replace('{serverInfrastructure}', data.serverInfrastructure)
     .replace('{osDistribution}', JSON.stringify(data.osDistribution))
     .replace('{vmSummary}', JSON.stringify(data.vmSummary));
 
   // Cloud Discovery paragraph and Server Scan Summary table
-  const cloudDiscoveryParagraph = `The assessed environment consists of <b>${data.totalServers}</b> servers that are discovered by Azure Migrate and <b>${data.inScopeServers}</b> servers are in scope for which the assessment report is created. These servers were analyzed in detail to provide sizing recommendations, cost estimations, and readiness for Azure migration.`;
+  const cloudDiscoveryParagraph = `The assessed environment consists of <b>${data.totalServers}</b> servers that are discovered by Azure Migrate and <b>${data.inScopeServers ?? 0}</b> servers are in scope for which the assessment report is created. These servers were analyzed in detail to provide sizing recommendations, cost estimations, and readiness for Azure migration.`;
 
   const serverScanSummaryTable = `
     <h2>Server Scan Summary</h2>
     <table>
       <tr><th>Total No. Of Servers discovered</th><td>${data.totalServers}</td></tr>
-      <tr><th>In scope Servers count</th><td>${data.inScopeServers}</td></tr>
+      <tr><th>In scope Servers count</th><td>${data.inScopeServers ?? 0}</td></tr>
       <tr><th>Windows Servers</th><td>${data.windowsServers ?? ''}</td></tr>
       <tr><th>Linux Servers</th><td>${data.linuxServers ?? ''}</td></tr>
       <tr><th>Total Storage (TB)</th><td>${data.totalStorageTB ?? ''}</td></tr>

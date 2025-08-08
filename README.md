@@ -1,36 +1,188 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Professional Services Assessment Tool
 
-## Getting Started
+A comprehensive Azure migration assessment tool that helps organizations analyze their on-premises infrastructure and generate detailed migration reports with cost optimization recommendations.
 
-First, run the development server:
+## Features
 
+### 🎯 Core Assessment Capabilities
+- **Azure Migrate Integration**: Process Azure Migrate assessment data
+- **VM Size Recommendations**: AI-powered VM sizing recommendations
+- **Cost Analysis**: Detailed cost breakdowns with multiple pricing options
+- **Disk Optimization**: Intelligent disk type recommendations
+- **Report Generation**: Professional Word document reports
+
+### 🔧 Disk Constraint System
+- **Premium Disk Filtering**: Automatically filter out Premium SSD and Premium SSD V2 disks
+- **Standard SSD Fallback**: Convert premium disks to cost-effective Standard SSD
+- **Flexible Constraints**: Support for various constraint syntaxes
+- **Consistent Application**: Ensure constraints are applied across all report sections
+
+### 📊 Reporting Features
+- **Cost Comparison Tables**: Pay-as-you-go vs Reserved Instance pricing
+- **Compute Breakdown**: Detailed VM sizing and cost analysis
+- **Storage Analysis**: Disk recommendations with cost optimization
+- **Professional Templates**: Customizable Word document templates
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Azure subscription (for pricing data)
+
+### Installation
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd prof-svc-project
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to access the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Disk Constraints Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Basic Constraints
+```typescript
+// Filter out premium disks
+"Dont choose premium disks"
 
-## Learn More
+// Filter out premium v2 disks
+"Dont choose premium v2 disks"
 
-To learn more about Next.js, take a look at the following resources:
+// Filter both types
+"Dont choose premium disks or premium v2 disks"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Advanced Constraints
+```typescript
+// Comprehensive premium filtering
+"Dont select any type of premium disk"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+// Ultra disk filtering
+"Dont choose ultra disks"
 
-## Deploy on Vercel
+// Standard disk preferences
+"Prefer standard ssd"
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Example Workflow
+1. Upload Azure Migrate assessment data
+2. Specify disk constraints in the assessment form
+3. Generate comprehensive migration report
+4. Review cost-optimized recommendations
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentation
+
+### 📚 Technical Guides
+- **[Disk Constraints Guide](DISK_CONSTRAINTS_GUIDE.md)** - Comprehensive technical documentation for the disk constraint system
+- **[Docker Deployment Guide](DOCKER_DEPLOYMENT.md)** - Deployment instructions and disk constraint overview
+- **[Azure Deployment Guide](AZURE_DEPLOYMENT_GUIDE.md)** - Azure-specific deployment instructions
+
+### 🔧 API Documentation
+- **VM Recommendations**: `/api/vm-recommendation`
+- **Report Generation**: `/api/generate-report`
+- **Azure OpenAI Integration**: `/api/azure-openai`
+
+## Architecture
+
+### Core Components
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   └── dashboard/         # Dashboard pages
+├── components/            # React components
+├── lib/                   # Utility functions
+│   ├── utils.ts          # Disk constraint system
+│   ├── azureVmAnalysis.ts # VM analysis logic
+│   └── azureOpenAI.ts    # OpenAI integration
+└── types/                # TypeScript interfaces
+```
+
+### Disk Constraint System
+- **Constraint Application**: `applyDiskConstraints()`
+- **Data Consistency**: `getConstrainedDiskData()`
+- **Testing Framework**: `testDiskConstraintApplication()`
+
+## Recent Updates
+
+### ✅ Fixed Issues
+- **Inconsistent Constraint Application**: Fixed issue where only 2 out of 7 premium disks were being filtered
+- **Data Inconsistency**: Ensured constraints are applied consistently across all report sections
+- **Debug Logging**: Added comprehensive logging for constraint application tracking
+
+### 🔧 Technical Improvements
+- Enhanced constraint detection logic
+- Improved error handling and fallback mechanisms
+- Added comprehensive testing framework
+- Optimized API integration
+
+## Development
+
+### Testing
+```bash
+# Run constraint tests
+npm run test:constraints
+
+# Run full test suite
+npm test
+```
+
+### Debug Logging
+The system provides comprehensive logging for troubleshooting:
+```
+🧪 [Disk Test] Testing disk constraint application
+🔄 [Disk Consistency] Applying constraints to all disk data
+✅ [Disk Test] Constraints successfully reduced premium disk count
+```
+
+### Code Quality
+- TypeScript for type safety
+- ESLint for code quality
+- Prettier for code formatting
+- Comprehensive error handling
+
+## Deployment
+
+### Docker Deployment
+```bash
+# Build and run with Docker
+docker-compose up -d
+
+# Or use the deployment script
+./deploy-to-azure.sh
+```
+
+### Azure Deployment
+```bash
+# Deploy to Azure Container Instances
+./aci-deploy.sh
+
+# Or use GitHub Actions
+# See .github/workflows/azure-deploy.yml
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## Support
+
+For technical support or questions about the disk constraint system:
+- Check the [Disk Constraints Guide](DISK_CONSTRAINTS_GUIDE.md)
+- Review the debug logs for troubleshooting
+- Open an issue for bugs or feature requests
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

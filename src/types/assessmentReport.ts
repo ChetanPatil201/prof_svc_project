@@ -41,13 +41,16 @@ export interface AssessmentReportData {
   linuxServers: number;
   totalStorageTB: number;
   numDisksInScope: number;
-  allAssessedDisks?: any[];
+  allAssessedDisks?: AssessedDisk[];
   osDistributionTable?: { os: string; count: number }[];
   osDistributionTotal?: number;
   inScopeServers?: { machine: string; operatingSystem: string; cores: string | number; memoryMb: string | number; storageGb: string | number }[];
   cloudReadiness?: { machine: string; operatingSystem: string; vmReadiness: string; azurePlan?: string }[];
   genAiVmSummary?: { vmName: string; cores: string | number; memoryMB: string | number; cpuUsage: string | number; memoryUsage: string | number; recommendedSize: string }[];
   targetRegion?: string; // Target Azure region from assessment
+  
+  // Rules and Constraints for disk recommendations
+  rulesAndConstraints?: string;
   
   // Reserved Instance Data
   payAsYouGoData?: ReservedInstanceData;
@@ -93,6 +96,16 @@ export interface CostComparisonData {
   };
 }
 
+export interface CostComparisonItem {
+  machine: string;
+  payAsYouGoCost: number;
+  reservedInstance1YrCost: number;
+  reservedInstance3YrCost: number;
+  savings1Yr: number;
+  savings3Yr: number;
+  recommendedOption: 'pay-as-you-go' | '1-year-ri' | '3-year-ri';
+}
+
 export interface CostComparisonTableRow {
   pricingPlan: string;
   configMatch?: string;
@@ -131,6 +144,30 @@ export const ASSESSMENT_REPORT_TEMPLATE: AssessmentReportTemplate = {
 export interface AssessmentSummary {
   tool?: string; // e.g., "Azure Migrate"
   // Add more fields as needed from Assessment_Summary
+}
+
+export interface AssessmentReportSummary {
+  totalMachines: number;
+  totalCosts: {
+    payAsYouGo: number;
+    reservedInstance1Yr: number;
+    reservedInstance3Yr: number;
+  };
+  totalSavings: {
+    reservedInstance1Yr: number;
+    reservedInstance3Yr: number;
+  };
+  recommendations: {
+    machinesFor1YrRI: string[];
+    machinesFor3YrRI: string[];
+    machinesForPayAsYouGo: string[];
+  };
+}
+
+export interface AssessmentReportComparison {
+  payAsYouGo: FullAssessmentReportData | null;
+  reservedInstance1Yr: FullAssessmentReportData | null;
+  reservedInstance3Yr: FullAssessmentReportData | null;
 }
 
 export interface AssessedMachine {

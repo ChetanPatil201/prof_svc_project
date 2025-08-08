@@ -1,3 +1,5 @@
+import { retryWithBackoff } from './utils';
+
 // Sample Azure Migrate report input (for testing)
 export const sampleMigrateReport = [
   {
@@ -117,6 +119,8 @@ export function parseMigrateReport(input: any): VMWorkload[] {
 
 // Fetch Azure VM pricing from Azure Retail Prices API
 export async function fetchAzureVmPricing(region: string, osType: string): Promise<any[]> {
+  console.log("🔍 [Azure Pricing] Fetching pricing for region:", region, "OS:", osType);
+  
   const apiUrl =
     "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview";
   // Build OData filter for all price types
@@ -130,32 +134,53 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
 
   let results: any[] = [];
   let nextPage = `${apiUrl}&$filter=${encodeURIComponent(filter)}`;
+  let pageCount = 0;
+  
   while (nextPage) {
-    const res = await fetch(nextPage);
-    if (!res.ok) throw new Error(`Failed to fetch Azure pricing: ${res.status}`);
-    const data = await res.json();
-    if (data.Items) {
-      results.push(
-        ...data.Items.map((item: any) => ({
-          sku: item.armSkuName,
-          skuName: item.skuName,
-          productName: item.productName,
-          cores: extractCores(item.skuName),
-          memoryGB: extractMemory(item.skuName),
-          priceType: item.priceType, // Consumption, Reservation
-          term: item.term || '', // 1 Year, 3 Years, or empty
-          retailPrice: item.retailPrice,
-          pricePerMonthUSD: item.retailPrice * 730, // 730 hours/month
-          unitOfMeasure: item.unitOfMeasure,
-          osType: osType,
-          isAhb: item.skuName?.toLowerCase().includes('ahb') || false,
-        }))
-      );
+    pageCount++;
+    
+    try {
+      const pageData = await retryWithBackoff(async () => {
+        const res = await fetch(nextPage);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ [Azure Pricing] API Error:", errorText);
+          throw new Error(`Failed to fetch Azure pricing: ${res.status} - ${errorText}`);
+        }
+        
+        const data = await res.json();
+        return data;
+      }, 2, 500, 5000); // 2 retries, 500ms base delay, 5s max delay
+      
+      if (pageData.Items) {
+        results.push(
+          ...pageData.Items.map((item: any) => ({
+            sku: item.armSkuName,
+            skuName: item.skuName,
+            productName: item.productName,
+            cores: extractCores(item.skuName),
+            memoryGB: extractMemory(item.skuName),
+            priceType: item.priceType || 'Consumption', // Default to Consumption if undefined
+            term: item.term || '', // 1 Year, 3 Years, or empty
+            retailPrice: item.retailPrice,
+            pricePerMonthUSD: item.retailPrice * 730, // 730 hours/month
+            unitOfMeasure: item.unitOfMeasure,
+            osType: osType,
+            isAhb: item.skuName?.toLowerCase().includes('ahb') || false,
+          }))
+        );
+      }
+      nextPage = pageData.NextPageLink;
+    } catch (error) {
+      console.error("❌ [Azure Pricing] Error fetching page", pageCount, ":", error);
+      throw error;
     }
-    nextPage = data.NextPageLink;
   }
+  
   // If no results, retry without the OS filter
   if (results.length === 0 && (osType === "Windows" || osType === "Linux")) {
+    console.log("🔍 [Azure Pricing] No results with OS filter, trying without OS filter...");
     let fallbackFilter = `serviceName eq 'Virtual Machines' and serviceFamily eq 'Compute' and armRegionName eq '${region}' and isPrimaryMeterRegion eq true`;
     let fallbackResults: any[] = [];
     let fallbackNextPage = `${apiUrl}&$filter=${encodeURIComponent(fallbackFilter)}`;
@@ -171,7 +196,7 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
             productName: item.productName,
             cores: extractCores(item.skuName),
             memoryGB: extractMemory(item.skuName),
-            priceType: item.priceType,
+            priceType: item.priceType || 'Consumption', // Default to Consumption if undefined
             term: item.term || '',
             retailPrice: item.retailPrice,
             pricePerMonthUSD: item.retailPrice * 730,
@@ -183,11 +208,14 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
       }
       fallbackNextPage = data.NextPageLink;
     }
-    results = fallbackResults.filter((sku) => sku.cores && sku.memoryGB);
+    results = fallbackResults.filter((sku) => sku.cores); // Only filter by cores, not memory
   }
+  
   // Group by SKU and return all price types for each SKU
   const grouped: Record<string, any> = {};
-  for (const item of results.filter((sku) => sku.cores && sku.memoryGB)) {
+  
+  // Only filter by cores, not memory (since memoryGB can be null)
+  for (const item of results.filter((sku) => sku.cores)) {
     if (!grouped[item.sku]) grouped[item.sku] = { sku: item.sku, skuName: item.skuName, osType: item.osType };
     if (item.priceType === 'Consumption') {
       if (item.isAhb) {
@@ -211,7 +239,11 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
       }
     }
   }
-  return Object.values(grouped);
+  
+  const finalResults = Object.values(grouped);
+  console.log("🔍 [Azure Pricing] Fetched", finalResults.length, "prices for", region, osType);
+  
+  return finalResults;
 }
 
 // Fetch price for a specific SKU, region, priceType, and term (optional)
@@ -247,11 +279,14 @@ export async function fetchAzureVmPriceDirect({
     }
     const apiUrl = `https://prices.azure.com/api/retail/prices?$filter=${encodeURIComponent(filter)}&$top=1`;
     try {
-      const res = await fetch(apiUrl);
-      if (!res.ok) {
-        continue;
-      }
-      const data = await res.json();
+      const data = await retryWithBackoff(async () => {
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      }, 2, 300, 3000); // 2 retries, 300ms base delay, 3s max delay
+      
       if (data.Items && data.Items.length > 0) {
         const pricePerHour = data.Items[0].unitPrice ?? 0;
         const hoursPerMonth = 730;
@@ -267,12 +302,33 @@ export async function fetchAzureVmPriceDirect({
 
 // Helper: Extract cores from SKU name (e.g., "D4s v3" => 4)
 function extractCores(skuName: string): number | null {
-  const match = skuName.match(/([0-9]+)[^0-9]*v?\d*/i);
-  return match ? parseInt(match[1], 10) : null;
+  if (!skuName) return null;
+  
+  // Handle modern SKU formats like Standard_D2as_v5, Standard_D2s_v3, etc.
+  const modernMatch = skuName.match(/Standard_[A-Za-z]*(\d+)[a-z]*_v\d+/i);
+  if (modernMatch) {
+    return parseInt(modernMatch[1], 10);
+  }
+  
+  // Handle older formats
+  const legacyMatch = skuName.match(/([0-9]+)[^0-9]*v?\d*/i);
+  if (legacyMatch) {
+    return parseInt(legacyMatch[1], 10);
+  }
+  
+  // Handle formats like "D2", "D4", etc.
+  const simpleMatch = skuName.match(/[A-Za-z]*(\d+)/i);
+  if (simpleMatch) {
+    return parseInt(simpleMatch[1], 10);
+  }
+  
+  return null;
 }
+
 // Helper: Extract memory from SKU name (not available in name, so returns null)
 function extractMemory(skuName: string): number | null {
   // Real implementation would map SKU to memory size using a lookup table
+  // For now, we'll return null and handle this in the recommendation logic
   return null;
 }
 
@@ -382,47 +438,76 @@ export function transformAssessmentProperty(raw: any): AssessmentPropertyRow {
 
 // Recommend VM size for each workload
 export async function recommendVmSizes(workloads: any[]): Promise<VMRecommendation[]> {
+  console.log("🔍 [VM Recommendation] Starting VM size recommendations for", workloads.length, "workloads");
   const recommendations: VMRecommendation[] = [];
+  
   for (const vm of workloads) {
-    const prices = await fetchAzureVmPricing(vm.region, vm.osType);
-    let match = null;
-    // 1. Try to match on recommendedSize (armSkuName) if provided
-    if (vm.recommendedSize) {
-      const rec = String(vm.recommendedSize).toLowerCase();
-      match = prices.find(
-        (sku) => {
-          if (!sku.sku) return false;
-          const s = sku.sku.toLowerCase();
-          return (
-            s === rec ||
-            s.replace(/_/g, '-') === rec.replace(/_/g, '-') ||
-            s.replace(/_/g, ' ') === rec.replace(/_/g, ' ') ||
-            s.replace(/-/g, '_') === rec.replace(/-/g, '_')
-          );
-        }
-      );
-    }
-    // 2. Fallback: Find the smallest SKU that fits the workload
-    if (!match) {
-      match = prices.find(
-        (sku) => sku.cores >= vm.cores && (!sku.memoryGB || sku.memoryGB >= vm.memoryGB)
-      );
-    }
-    if (match) {
+    console.log("🔍 [VM Recommendation] Processing VM:", vm.vmName);
+    try {
+      const prices = await fetchAzureVmPricing(vm.region, vm.osType);
+      
+      let match = null;
+      // 1. Try to match on recommendedSize (armSkuName) if provided
+      if (vm.recommendedSize) {
+        const rec = String(vm.recommendedSize).toLowerCase();
+        match = prices.find(
+          (sku) => {
+            if (!sku.sku) return false;
+            const s = sku.sku.toLowerCase();
+            return (
+              s === rec ||
+              s.replace(/_/g, '-') === rec.replace(/_/g, '-') ||
+              s.replace(/_/g, ' ') === rec.replace(/_/g, ' ') ||
+              s.replace(/-/g, '_') === rec.replace(/-/g, '_')
+            );
+          }
+        );
+      }
+      // 2. Fallback: Find the smallest SKU that fits the workload (focus on cores, memory is optional)
+      if (!match) {
+        match = prices.find(
+          (sku) => {
+            // Must have enough cores
+            if (!sku.cores || sku.cores < vm.cores) return false;
+            
+            // If we have memory info for both, check memory too
+            if (sku.memoryGB && vm.memoryGB) {
+              return sku.memoryGB >= vm.memoryGB;
+            }
+            
+            // If no memory info for SKU, just check cores
+            return true;
+          }
+        );
+      }
+      if (match) {
+        recommendations.push({
+          vmName: vm.vmName,
+          recommendedSize: match.sku,
+          pricePerMonthUSD: match.pricePerMonthUSD,
+          details: match,
+        });
+        console.log("✅ [VM Recommendation] Found match for", vm.vmName, ":", match.sku);
+      } else {
+        recommendations.push({
+          vmName: vm.vmName,
+          recommendedSize: "No suitable SKU found",
+          pricePerMonthUSD: 0,
+          details: null,
+        });
+        console.log("⚠️ [VM Recommendation] No suitable SKU found for", vm.vmName);
+      }
+    } catch (error) {
+      console.error("❌ [VM Recommendation] Error processing VM", vm.vmName, ":", error);
       recommendations.push({
         vmName: vm.vmName,
-        recommendedSize: match.sku,
-        pricePerMonthUSD: match.pricePerMonthUSD,
-        details: match,
-      });
-    } else {
-      recommendations.push({
-        vmName: vm.vmName,
-        recommendedSize: "No suitable SKU found",
+        recommendedSize: "Error fetching pricing",
         pricePerMonthUSD: 0,
-        details: null,
+        details: { error: error instanceof Error ? error.message : String(error) },
       });
     }
   }
+  
+  console.log("✅ [VM Recommendation] Completed recommendations for", recommendations.length, "VMs");
   return recommendations;
 } 

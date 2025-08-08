@@ -1,0 +1,33 @@
+location: West US
+properties:
+  managedEnvironmentId: /subscriptions/{subscription-id}/resourceGroups/prof-svc-rg/providers/Microsoft.App/managedEnvironments/prof-svc-env
+  configuration:
+    ingress:
+      external: true
+      targetPort: 3000
+      allowInsecure: false
+    secrets:
+      - name: azure-openai-endpoint
+        value: "https://cp-azureopenai.openai.azure.com/"
+      - name: azure-openai-key
+        value: "***REMOVED***"
+      - name: azure-openai-deployment
+        value: "gpt-4o"
+      - name: node-env
+        value: "production"
+  template:
+    containers:
+      - name: prof-svc-app
+        image: profsvcregistry.azurecr.io/prof-svc-project:latest
+        env:
+          - name: AZURE_OPENAI_ENDPOINT
+            secretRef: azure-openai-endpoint
+          - name: AZURE_OPENAI_KEY
+            secretRef: azure-openai-key
+          - name: AZURE_OPENAI_DEPLOYMENT
+            secretRef: azure-openai-deployment
+          - name: NODE_ENV
+            secretRef: node-env
+    scale:
+      minReplicas: 0
+      maxReplicas: 10 
