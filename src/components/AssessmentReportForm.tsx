@@ -1,17 +1,18 @@
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { FileText, NotebookPen, MessageSquareText, FolderOpen, UploadCloud } from "lucide-react"
+import { FileText, NotebookPen, MessageSquareText, FolderOpen, UploadCloud, RotateCcw } from "lucide-react"
 import * as XLSX from "xlsx"
 import Papa from "papaparse"
 import type { ParseResult, ParseError } from "papaparse"
 import { transformAssessedMachine, transformAssessedDisk } from "@/lib/azureVmAnalysis";
 import { fetchAzureVmPricing, fetchAzureVmPriceDirect } from '@/lib/azureVmAnalysis';
 import { AssessmentReportData } from '@/types/assessmentReport';
+import { retryWithBackoff } from '@/lib/utils';
 import AssessmentFileUpload from "./AssessmentFileUpload";
 
 // Improved pipe table parser: extract only the first markdown table
@@ -87,8 +88,8 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
   const [parsedInput, setParsedInput] = useState<any[] | null>(null)
   const [genAIOutput, setGenAIOutput] = useState<string | null>(null);
   const [reportData, setReportData] = useState<AssessmentReportData | null>(null);
-
-
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const azureReportRef = useRef<HTMLInputElement>(null)
   const azureReport1YrRef = useRef<HTMLInputElement>(null)
@@ -96,6 +97,49 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
   const notesFileRef = useRef<HTMLInputElement>(null)
   const meetingTranscriptRef = useRef<HTMLInputElement>(null)
   const templateFileRef = useRef<HTMLInputElement>(null)
+
+  // Comprehensive reset function to clear all state and file inputs
+  const resetForm = useCallback(() => {
+    setIsResetting(true);
+    
+    // Clear all state variables
+    setAzureReport(null);
+    setAzureReport1Yr(null);
+    setAzureReport3Yr(null);
+    setNotesFile(null);
+    setMeetingTranscript(null);
+    setOtherDetails("");
+    setRulesAndConstraints("");
+    setTemplateFile(null);
+    setIsSubmitting(false);
+    setRecommendations(null);
+    setError(null);
+    setParsedInput(null);
+    setGenAIOutput(null);
+    setReportData(null);
+    setShowSuccessMessage(false);
+
+    // Clear all file input elements
+    if (azureReportRef.current) azureReportRef.current.value = "";
+    if (azureReport1YrRef.current) azureReport1YrRef.current.value = "";
+    if (azureReport3YrRef.current) azureReport3YrRef.current.value = "";
+    if (notesFileRef.current) notesFileRef.current.value = "";
+    if (meetingTranscriptRef.current) meetingTranscriptRef.current.value = "";
+    if (templateFileRef.current) templateFileRef.current.value = "";
+
+    console.log("🔄 [Reset] Form and all state cleared successfully");
+    
+    // Reset the resetting flag after a short delay
+    setTimeout(() => setIsResetting(false), 500);
+  }, []);
+
+  // Auto-reset when starting a new assessment
+  const handleStartNewAssessment = useCallback(() => {
+    if (window.confirm("Are you sure you want to start a new assessment?\n\nThis will clear:\n• All uploaded files\n• Current assessment results\n• Form data and settings\n\nMake sure you've downloaded your report before proceeding.")) {
+      resetForm();
+    }
+  }, [resetForm]);
+
   // Helper: Parse file to JSON array (all sheets)
   async function parseAssessmentSheets(file: File): Promise<any> {
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -142,6 +186,59 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
     };
   }
 
+  // Helper: Parse and format rules and constraints for AI prompt
+  function formatRulesAndConstraints(rules: string): string {
+    if (!rules || rules.trim() === '') return '';
+    
+    // Convert to uppercase for better AI understanding
+    const formattedRules = rules
+      .split('\n')
+      .map(rule => rule.trim())
+      .filter(rule => rule.length > 0)
+      .map(rule => `• ${rule}`)
+      .join('\n');
+    
+    return formattedRules;
+  }
+
+  // Helper: Parse and format disk-specific constraints for AI prompt
+  function formatDiskConstraints(rules: string): string {
+    if (!rules || rules.trim() === '') return '';
+    
+    const diskKeywords = [
+      'premium', 'premium v2', 'premium v1', 'premium disk', 'premium ssd', 'premium ssd v2',
+      'standard', 'standard ssd', 'standard hdd', 'ultra', 'ultra disk', 'disk', 'ssd', 'hdd'
+    ];
+    
+    const diskConstraints = rules
+      .split('\n')
+      .map(rule => rule.trim().toLowerCase())
+      .filter(rule => rule.length > 0)
+      .filter(rule => diskKeywords.some(keyword => rule.includes(keyword)))
+      .map(rule => {
+        // Make disk constraints more explicit
+        if (rule.includes('premium v2') || rule.includes('premiumv2')) {
+          return '• DO NOT recommend Premium SSD V2 disks under ANY circumstances';
+        }
+        if (rule.includes('premium') && !rule.includes('v2')) {
+          return '• DO NOT recommend Premium SSD disks under ANY circumstances';
+        }
+        if (rule.includes('ultra')) {
+          return '• DO NOT recommend Ultra Disk under ANY circumstances';
+        }
+        if (rule.includes('standard ssd')) {
+          return '• PREFER Standard SSD over other disk types when possible';
+        }
+        if (rule.includes('standard hdd')) {
+          return '• PREFER Standard HDD over other disk types when possible';
+        }
+        return `• ${rule}`;
+      })
+      .join('\n');
+    
+    return diskConstraints || '• No specific disk constraints provided';
+  }
+
   function getMigratePrice(row: any): string | number | null {
     // Try common column names for price
     return (
@@ -159,6 +256,15 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("🚀 [Form Submit] Starting assessment report generation...");
+    console.log("🔍 [Form Submit] Files uploaded:");
+    console.log("  - Azure Report (Pay-as-you-go):", azureReport?.name || "Not uploaded");
+    console.log("  - Azure Report (1-Year):", azureReport1Yr?.name || "Not uploaded");
+    console.log("  - Azure Report (3-Year):", azureReport3Yr?.name || "Not uploaded");
+    console.log("  - Notes File:", notesFile?.name || "Not uploaded");
+    console.log("  - Meeting Transcript:", meetingTranscript?.name || "Not uploaded");
+    console.log("  - Template File:", templateFile?.name || "Not uploaded");
+    
     setIsSubmitting(true);
     setRecommendations(null);
     setError(null);
@@ -167,14 +273,30 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
     try {
       if (!azureReport) throw new Error("Please upload an Azure Migrate Assessment Report (Pay-as-you-go).");
       
+      console.log("🔍 [Form Submit] Starting file parsing...");
+      
       // Parse all three assessment reports
+      console.log("🔍 [Form Submit] Parsing Pay-as-you-go report...");
       const payAsYouGoSheets = await parseAssessmentSheets(azureReport);
+      console.log("✅ [Form Submit] Pay-as-you-go report parsed successfully");
+      console.log("🔍 [Form Submit] Pay-as-you-go sheets:", Object.keys(payAsYouGoSheets));
+      
+      console.log("🔍 [Form Submit] Parsing 1-Year report...");
       const oneYearSheets = azureReport1Yr ? await parseAssessmentSheets(azureReport1Yr) : null;
+      console.log("✅ [Form Submit] 1-Year report parsed successfully");
+      if (oneYearSheets) console.log("🔍 [Form Submit] 1-Year sheets:", Object.keys(oneYearSheets));
+      
+      console.log("🔍 [Form Submit] Parsing 3-Year report...");
       const threeYearSheets = azureReport3Yr ? await parseAssessmentSheets(azureReport3Yr) : null;
+      console.log("✅ [Form Submit] 3-Year report parsed successfully");
+      if (threeYearSheets) console.log("🔍 [Form Submit] 3-Year sheets:", Object.keys(threeYearSheets));
       
       // Parse Pay-as-you-go data (primary data source)
+      console.log("🔍 [Form Submit] Extracting data from sheets...");
       const payAsYouGoMachines = payAsYouGoSheets.All_Assessed_Machines || [];
       const payAsYouGoDisks = payAsYouGoSheets.All_Assessed_Disks || [];
+      console.log("🔍 [Form Submit] Pay-as-you-go machines count:", payAsYouGoMachines.length);
+      console.log("🔍 [Form Submit] Pay-as-you-go disks count:", payAsYouGoDisks.length);
       
       // Extract region from Assessment_Summary sheet
       const assessmentSummary = payAsYouGoSheets.Assessment_Summary || [];
@@ -192,34 +314,58 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
       if (regionRow && regionRow.SelectedValue) {
         targetRegion = regionRow.SelectedValue.toLowerCase().replace(/\s+/g, '');
       }
+      console.log("🔍 [Form Submit] Target region:", targetRegion);
       
       // Parse 1-Year Reserved Instance data
       const oneYearMachines = oneYearSheets?.All_Assessed_Machines || [];
       const oneYearDisks = oneYearSheets?.All_Assessed_Disks || [];
+      console.log("🔍 [Form Submit] 1-Year machines count:", oneYearMachines.length);
+      console.log("🔍 [Form Submit] 1-Year disks count:", oneYearDisks.length);
       
       // Parse 3-Year Reserved Instance data
       const threeYearMachines = threeYearSheets?.All_Assessed_Machines || [];
       const threeYearDisks = threeYearSheets?.All_Assessed_Disks || [];
+      console.log("🔍 [Form Submit] 3-Year machines count:", threeYearMachines.length);
+      console.log("🔍 [Form Submit] 3-Year disks count:", threeYearDisks.length);
       
       // Transform all data
+      console.log("🔍 [Form Submit] Starting data transformation...");
       const transformedPayAsYouGoMachines = payAsYouGoMachines.map(transformAssessedMachine);
       const transformedPayAsYouGoDisks = payAsYouGoDisks.map(transformAssessedDisk);
       const transformedOneYearMachines = oneYearMachines.map(transformAssessedMachine);
       const transformedOneYearDisks = oneYearDisks.map(transformAssessedDisk);
       const transformedThreeYearMachines = threeYearMachines.map(transformAssessedMachine);
       const transformedThreeYearDisks = threeYearDisks.map(transformAssessedDisk);
+      console.log("✅ [Form Submit] Data transformation completed");
       
       setParsedInput(transformedPayAsYouGoMachines);
+      
       // Map to VMWorkload format for backend
+      console.log("🔍 [Form Submit] Creating VM workloads for API...");
       const vmWorkloads = transformedPayAsYouGoMachines.map(toVMWorkload);
+      console.log("🔍 [Form Submit] VM workloads count:", vmWorkloads.length);
+      
       // POST to API for recommendations
-      const res = await fetch("/api/vm-recommendation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(vmWorkloads),
-      });
-      if (!res.ok) throw new Error("Failed to get recommendations.");
-      const data = await res.json();
+      console.log("🔍 [Form Submit] Calling VM recommendation API...");
+      
+      const data = await retryWithBackoff(async () => {
+        const res = await fetch("/api/vm-recommendation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(vmWorkloads),
+        });
+        console.log("🔍 [Form Submit] VM recommendation API response status:", res.status);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ [Form Submit] VM recommendation API error:", errorText);
+          throw new Error(`Failed to get recommendations. Status: ${res.status}, Response: ${errorText}`);
+        }
+        
+        return await res.json();
+      }, 3, 1000, 10000); // 3 retries, 1s base delay, 10s max delay
+      
+      console.log("✅ [Form Submit] VM recommendations received successfully");
       setRecommendations(data.recommendations);
       // Prepare a detailed prompt for GenAI with all VM and disk data
       const vmDataJson = JSON.stringify(transformedPayAsYouGoMachines);
@@ -240,7 +386,7 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
         const batchDiskDataJson = JSON.stringify(batchDisks);
         
         // Enhanced prompt to include reserved instance pricing comparison
-        const prompt = `You are a cloud infrastructure expert specializing in Azure VM sizing and cost optimization. You will receive detailed VM and disk information from Azure Migrate assessments for Pay-as-you-go, 1-Year Reserved Instances, and 3-Year Reserved Instances, and provide comprehensive cost analysis and recommendations.
+        const prompt = `You are a cloud infrastructure expert specializing in Azure VM sizing, disk optimization, and cost analysis. You will receive detailed VM and disk information from Azure Migrate assessments for Pay-as-you-go, 1-Year Reserved Instances, and 3-Year Reserved Instances, and provide comprehensive cost analysis and recommendations.
 
 CONTEXT:
 - Target Region: ${targetRegion} (use this region for all pricing calculations)
@@ -258,9 +404,19 @@ IMPORTANT REQUIREMENTS:
 6. Include cost comparisons across all three pricing models (Pay-as-you-go, 1-Year RI, 3-Year RI)
 
 ${rulesAndConstraints ? `CUSTOM RULES AND CONSTRAINTS:
-${rulesAndConstraints}
+${formatRulesAndConstraints(rulesAndConstraints)}
 
-You MUST strictly adhere to these rules and constraints when making recommendations. These rules override any default optimization strategies.` : ''}
+CRITICAL DISK CONSTRAINT ENFORCEMENT:
+You MUST strictly follow these disk-related constraints:
+${formatDiskConstraints(rulesAndConstraints)}
+
+CRITICAL: You MUST strictly adhere to these rules and constraints when making ALL recommendations including:
+- VM SKU selection (compute resources)
+- Disk type recommendations (Premium, Premium v2, Standard SSD, Standard HDD, Ultra Disk)
+- Storage tier selection
+- Any other Azure resource recommendations
+
+These rules override any default optimization strategies and must be applied to every recommendation you make.` : ''}
 
 ${otherDetails ? `ADDITIONAL CONTEXT AND REQUIREMENTS:
 ${otherDetails}
@@ -290,27 +446,83 @@ CRITICAL INSTRUCTIONS:
 6. Provide cost comparisons and recommend the best pricing option for each VM
 7. Return only the markdown table, and nothing else
 8. Be consistent and deterministic in your recommendations
-${rulesAndConstraints ? '9. STRICTLY FOLLOW the custom rules and constraints provided above' : ''}`;
+${rulesAndConstraints ? `9. STRICTLY FOLLOW the custom rules and constraints provided above for ALL recommendations (compute, disk, storage, networking, etc.)
+10. If any recommendation would violate the rules and constraints, you MUST choose an alternative that complies with the constraints
+11. In your justification, explain how your recommendations comply with the specified rules and constraints
+12. CRITICAL: For disk recommendations, if the original recommendation violates disk constraints, you MUST recommend an alternative disk type that complies with the constraints
+13. CRITICAL: If Premium SSD V2 is mentioned in constraints as forbidden, NEVER recommend Premium SSD V2 disks
+14. CRITICAL: If Premium SSD is mentioned in constraints as forbidden, NEVER recommend Premium SSD disks
+15. CRITICAL: Always check disk constraints before making any disk type recommendations` : ''}`;
 
         // POST to Azure OpenAI API for this batch with deterministic settings
-        const aiRes = await fetch("/api/azure-openai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            prompt,
-            options: {
-              temperature: 0,
-              seed: 42,
-              maxTokens: 2048
-            }
-          }),
-        });
-        if (!aiRes.ok) throw new Error("Failed to get GenAI recommendations.");
-        const aiData = await aiRes.json();
+        console.log("🔍 [GenAI Debug] Making API call to Azure OpenAI...");
+        console.log("🔍 [GenAI Debug] Prompt length:", prompt.length);
+        console.log("🔍 [GenAI Debug] Environment check - Endpoint:", process.env.AZURE_OPENAI_ENDPOINT ? "Set" : "Not set");
+        console.log("🔍 [GenAI Debug] Environment check - API Key:", process.env.AZURE_OPENAI_KEY ? "Set" : "Not set");
+        console.log("🔍 [GenAI Debug] Environment check - Deployment:", process.env.AZURE_OPENAI_DEPLOYMENT || "Using default");
+        console.log("🔍 [GenAI Debug] Rules and constraints:", rulesAndConstraints);
+        console.log("🔍 [GenAI Debug] Formatted disk constraints:", formatDiskConstraints(rulesAndConstraints));
+        
+        const aiData = await retryWithBackoff(async () => {
+          const aiRes = await fetch("/api/azure-openai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              prompt,
+              options: {
+                temperature: 0,
+                seed: 42,
+                maxTokens: 2048
+              }
+            }),
+          });
+          
+          console.log("🔍 [GenAI Debug] API Response Status:", aiRes.status);
+          console.log("🔍 [GenAI Debug] API Response OK:", aiRes.ok);
+          
+          if (!aiRes.ok) {
+            const errorText = await aiRes.text();
+            console.error("❌ [GenAI Debug] API Error Response:", errorText);
+            console.error("❌ [GenAI Debug] Response Status:", aiRes.status);
+            console.error("❌ [GenAI Debug] Response Headers:", Object.fromEntries(aiRes.headers.entries()));
+            throw new Error(`Failed to get GenAI recommendations. Status: ${aiRes.status}, Response: ${errorText}`);
+          }
+          
+          const data = await aiRes.json();
+          console.log("✅ [GenAI Debug] API call successful");
+          console.log("🔍 [GenAI Debug] AI Response length:", data.completion?.length || 0);
+          return data;
+        }, 3, 1000, 10000); // 3 retries, 1s base delay, 10s max delay
+        
         lastAiData = aiData; // Store the last AI response for fallback
         
         // Parse GenAI output table for this batch
         const batchGenAITable = parsePipeTable(aiData.completion);
+        
+        // Validate that the AI response doesn't contain forbidden disk types
+        if (rulesAndConstraints) {
+          const forbiddenDiskTypes = [];
+          if (rulesAndConstraints.toLowerCase().includes('premium v2') || rulesAndConstraints.toLowerCase().includes('premiumv2')) {
+            forbiddenDiskTypes.push('Premium SSD V2', 'PremiumV2', 'Premium SSD v2');
+          }
+          if (rulesAndConstraints.toLowerCase().includes('premium') && !rulesAndConstraints.toLowerCase().includes('v2')) {
+            forbiddenDiskTypes.push('Premium SSD', 'Premium');
+          }
+          
+          // Check if any forbidden disk types are in the AI response
+          const aiResponseText = aiData.completion.toLowerCase();
+          const violations = forbiddenDiskTypes.filter(type => 
+            aiResponseText.includes(type.toLowerCase())
+          );
+          
+          if (violations.length > 0) {
+            console.warn("⚠️ [GenAI Debug] AI response contains forbidden disk types:", violations);
+            console.warn("⚠️ [GenAI Debug] This may indicate that disk constraints are not being followed properly");
+          } else {
+            console.log("✅ [GenAI Debug] AI response complies with disk constraints");
+          }
+        }
+        
         allGenAIResults = allGenAIResults.concat(batchGenAITable);
       }
       
@@ -527,6 +739,8 @@ ${rulesAndConstraints ? '9. STRICTLY FOLLOW the custom rules and constraints pro
         allAssessedDisks: transformedPayAsYouGoDisks,
         cloudReadiness: cloudReadiness,
         genAiVmSummary,
+        // Add rules and constraints for disk recommendations
+        rulesAndConstraints,
         // Add reserved instance data
         payAsYouGoData,
         oneYearReservedData,
@@ -541,12 +755,26 @@ ${rulesAndConstraints ? '9. STRICTLY FOLLOW the custom rules and constraints pro
       });
 
       setReportData(assessmentData);
+      setShowSuccessMessage(true);
       if (onComplete) onComplete();
+      
+      console.log("✅ [Form Submit] Assessment completed successfully. User can now download report and start new assessment when ready.");
     } catch (err: any) {
+      console.error("❌ [Form Submit] Error occurred:", err);
+      console.error("❌ [Form Submit] Error message:", err.message);
+      console.error("❌ [Form Submit] Error stack:", err.stack);
       setError(err.message);
     }
     setIsSubmitting(false);
   };
+
+  useEffect(() => {
+    console.log("🚀 [Component Mount] AssessmentReportForm mounted.");
+  }, []);
+
+  useEffect(() => {
+    console.log("🔄 [Form Reset] Form reset triggered.");
+  }, []);
 
   return (
     <>
@@ -645,16 +873,66 @@ ${rulesAndConstraints ? '9. STRICTLY FOLLOW the custom rules and constraints pro
             </Label>
             <Textarea
               id="rules-constraints"
-              placeholder="e.g., 'Don't select premium v2 disk', 'Prefer standard SSDs', 'Limit costs to $200/month', 'Avoid burstable instances', 'Use only specific VM series'..."
+              placeholder="Examples:
+• Don't select premium v2 disk and premium disk
+• Avoid burstable instances (B-series)
+• Use only Standard_D and Standard_E VM series
+• Limit total cost to $200/month per VM
+• Prefer Standard SSD over Premium SSD
+• No Ultra Disk recommendations
+• Use only specific regions (East US, West US 2)
+• Avoid Windows licensing costs where possible
+
+IMPORTANT: For disk constraints, be very specific:
+• 'Don't select premium v2 disk and premium disk' - will prevent Premium SSD V2 and Premium SSD recommendations
+• 'Only use Standard SSD' - will force Standard SSD recommendations
+• 'No Ultra Disk' - will prevent Ultra Disk recommendations"
               value={rulesAndConstraints}
               onChange={(e) => setRulesAndConstraints(e.target.value)}
-              rows={4}
+              rows={6}
             />
+            <p className="text-sm text-gray-500 mt-1">
+              These rules will be strictly applied to ALL recommendations (compute, disk, storage, networking, etc.)
+            </p>
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-            {isSubmitting ? "Generating Report..." : "Generate Assessment Report"}
-          </Button>
+          <div className="flex gap-4">
+            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+              {isSubmitting ? "Generating Report..." : "Generate Assessment Report"}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={handleStartNewAssessment}
+              disabled={isSubmitting || isResetting}
+            >
+              <RotateCcw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
+              {isResetting ? 'Resetting...' : 'Start New Assessment'}
+            </Button>
+          </div>
+          
+          {/* Show Start New Assessment button prominently after successful assessment */}
+          {showSuccessMessage && !isResetting && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-blue-800">Ready for Next Assessment?</h4>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Download your report first, then click below to start a fresh assessment.
+                  </p>
+                </div>
+                <Button 
+                  type="button" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                  onClick={handleStartNewAssessment}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Start New Assessment
+                </Button>
+              </div>
+            </div>
+          )}
 
           {reportData && (
             <Button 
@@ -702,7 +980,17 @@ ${rulesAndConstraints ? '9. STRICTLY FOLLOW the custom rules and constraints pro
             </Button>
           )}
         </form>
-        {error && <div className="text-red-600 mt-4">{error}</div>}
+        {error && <div className="text-red-600 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">{error}</div>}
+        {showSuccessMessage && (
+          <div className="text-green-600 mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            ✅ Assessment completed successfully! You can now download your report and start a new assessment when ready.
+            {isResetting && (
+              <div className="mt-2 text-sm text-green-700">
+                🔄 Resetting form...
+              </div>
+            )}
+          </div>
+        )}
         {recommendations && parsedInput && (
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-2">VM Recommendations</h3>

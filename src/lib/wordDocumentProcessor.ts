@@ -104,17 +104,17 @@ Return only the updated content, maintaining the same formatting and structure.`
   }
 }
 
-export function replacePlaceholders(content: string, data: AssessmentReportData): string {
+export async function replacePlaceholders(content: string, data: AssessmentReportData): Promise<string> {
   let updatedContent = content;
 
   // Generate cost comparison table
-  const costComparisonTableData = generateCostComparisonTable(data);
+  const costComparisonTableData = await generateCostComparisonTable(data);
   
   // Generate compute breakdown data
-  const computeBreakdownData = generateComputeBreakdownData(data);
+  const computeBreakdownData = await generateComputeBreakdownData(data);
   
   // Generate disk breakdown data
-  const diskBreakdownData = generateDiskBreakdownData(data);
+  const diskBreakdownData = await generateDiskBreakdownData(data);
 
   // Replace common placeholders
   const replacements: Record<string, string> = {

@@ -1,0 +1,111 @@
+# Azure Cloud Migration Assessment Report Template
+
+## 1. Executive Summary – Cloud Discovery and Assessment
+
+This executive summary provides a comprehensive overview of the cloud discovery and assessment initiative undertaken for {{companyName}}. The assessment was conducted using Azure Migrate to evaluate the current on-premises infrastructure and determine cloud readiness for migration to Microsoft Azure.
+
+### Key Findings:
+• Total servers discovered: {{totalServers}}
+• Servers in scope for migration: {{inScopeServersCount}}
+• Cloud readiness assessment completed
+• Cost optimization opportunities identified
+• Migration strategy recommendations developed
+
+{{readinessSummary}}
+
+{{costAnalysis}}
+
+{{recommendations}}
+
+## 2. Cloud Discovery Report – Application Workloads
+
+This section provides detailed insights into the discovered application workloads and their current infrastructure characteristics. The assessment covers server specifications, operating system distribution, and workload categorization.
+
+### Server Infrastructure Assessment:
+{{serverInfrastructure}}
+
+### Operating System Distribution:
+{{osDistribution}}
+
+### VM Summary and Specifications:
+{{vmSummary}}
+
+## 3. Total Azure Cost Per Month
+
+The following table provides a comprehensive cost comparison across different Azure pricing models:
+
+| Pricing Plan | Config Match | Recurring/Month - Compute | Recurring/Month - Storage | Total Azure Cost Per Month |
+|--------------|--------------|---------------------------|---------------------------|---------------------------|
+| On-demand | PAYG | ${{payAsYouGoCompute}} | ${{payAsYouGoStorage}} | ${{payAsYouGoTotal}} |
+| Reserved Instance (1-Year) | 1-Year | ${{reservedInstance1YrCompute}} | ${{reservedInstance1YrStorage}} | ${{reservedInstance1YrTotal}} |
+| Reserved Instance (3-Year) | 3-Year | ${{reservedInstance3YrCompute}} | ${{reservedInstance3YrStorage}} | ${{reservedInstance3YrTotal}} |
+
+### Cost Optimization Summary:
+- **Total Monthly Savings with 1-Year RI**: ${{reservedInstance1YrSavings}}
+- **Total Monthly Savings with 3-Year RI**: ${{reservedInstance3YrSavings}}
+- **Recommended Pricing Model**: {{recommendedPricingModel}}
+
+## 4. Server Scan Summary
+
+| Metric | Value |
+|--------|-------|
+| Total No. Of Servers discovered | {{totalServers}} |
+| In scope Servers count | {{inScopeServersCount}} |
+| Windows Servers | {{windowsServers}} |
+| Linux Servers | {{linuxServers}} |
+| Total Storage (TB) | {{totalStorageTB}} |
+| No. Of Disks (In scope) | {{numDisksInScope}} |
+
+## 5. VM Instance Size Recommendation (Performance based – Right Sized)
+
+| Server Name | Cores | Memory (GB) | CPU usage (%) | Memory usage (%) | Recommended size | Monthly Cost |
+|-------------|-------|-------------|---------------|------------------|------------------|--------------|
+{{#serverTable}}
+| {{name}} | {{cores}} | {{memory}} | {{cpuUsage}} | {{memoryUsage}} | {{recommendedSize}} | {{monthlyCost}} |
+{{/serverTable}}
+
+## 6. Cloud Readiness Analysis and Plan
+
+| Machine | Operating System | VM Readiness | Azure Plan |
+|---------|------------------|--------------|------------|
+{{#cloudReadiness}}
+| {{machine}} | {{operatingSystem}} | {{vmReadiness}} | {{azurePlan}} |
+{{/cloudReadiness}}
+
+## 7. Detailed Server Analysis
+
+### In-Scope Servers:
+{{#inScopeServers}}
+- **{{machine}}**: {{operatingSystem}} | Cores: {{cores}} | Memory: {{memoryMb}} MB | Storage: {{storageGb}} GB
+{{/inScopeServers}}
+
+### Operating System Distribution:
+{{#osDistributionTable}}
+- **{{os}}**: {{count}} servers
+{{/osDistributionTable}}
+
+## 8. Recommendations and Next Steps
+
+### Migration Strategy:
+1. **Phase 1**: Migrate {{phase1Servers}} servers with high readiness scores
+2. **Phase 2**: Address compatibility issues for {{phase2Servers}} servers
+3. **Phase 3**: Optimize and right-size remaining workloads
+
+### Cost Optimization Recommendations:
+- Consider Reserved Instances for long-term workloads
+- Implement Azure Hybrid Benefit for eligible Windows Server licenses
+- Use Azure Spot Instances for non-critical workloads
+- Optimize storage tiers based on access patterns
+
+### Risk Mitigation:
+- Implement comprehensive backup and disaster recovery
+- Establish monitoring and alerting for migrated workloads
+- Plan for network connectivity and security requirements
+- Consider application dependencies and migration order
+
+---
+
+**Report Generated**: {{generatedDate}}
+**Assessment Tool**: Azure Migrate
+**Region**: {{targetRegion}}
+**Total Estimated Monthly Cost**: ${{totalMonthlyCost}} 
