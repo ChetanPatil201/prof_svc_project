@@ -1,29 +1,38 @@
 #!/bin/bash
 
-# Docker build and run script for Next.js application
+echo "🐳 Building Docker image locally..."
 
-# Set Docker path for macOS
-DOCKER_PATH="/Applications/Docker.app/Contents/Resources/bin/docker"
+# Configuration
+IMAGE_NAME="prof-svc-app"
+TAG="latest"
 
-echo "🐳 Building Docker image..."
-$DOCKER_PATH build -t prof-svc-project .
+# Set environment variables for build
+export NODE_ENV=production
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+export AZURE_OPENAI_KEY="your-azure-openai-key-here"
+export AZURE_OPENAI_DEPLOYMENT="gpt-35-turbo"
 
-if [ $? -eq 0 ]; then
+# Build Docker image
+echo "Building image: $IMAGE_NAME:$TAG"
+if docker build -t $IMAGE_NAME:$TAG .; then
     echo "✅ Docker image built successfully!"
-    echo ""
-    echo "🚀 Starting container..."
-    echo "📱 Application will be available at: http://localhost:3000"
-    echo "⏹️  Press Ctrl+C to stop the container"
-    echo ""
+    echo "Image: $IMAGE_NAME:$TAG"
     
-    # Run the container with environment variables
-    $DOCKER_PATH run -p 3000:3000 \
-      -e AZURE_OPENAI_ENDPOINT="$AZURE_OPENAI_ENDPOINT" \
-      -e AZURE_OPENAI_KEY="$AZURE_OPENAI_KEY" \
-      -e AZURE_OPENAI_DEPLOYMENT="$AZURE_OPENAI_DEPLOYMENT" \
-      --env-file .env.local \
-      prof-svc-project
+    # Show image details
+    echo ""
+    echo "📊 Image details:"
+    docker images $IMAGE_NAME:$TAG
+    
+    # Show image size
+    echo ""
+    echo "💾 Image size:"
+    docker images $IMAGE_NAME:$TAG --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+    
+    echo ""
+    echo "🚀 To run the container:"
+    echo "docker run -p 3000:3000 $IMAGE_NAME:$TAG"
+    
 else
     echo "❌ Docker build failed!"
     exit 1
-fi 
+fi

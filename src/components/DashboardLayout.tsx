@@ -1,13 +1,14 @@
 "use client"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { FileText, BookText, LayoutDashboard, Settings, User, LogOut } from "lucide-react"
+import { FileText, BookText, LayoutDashboard, Settings, User, LogOut, Network } from "lucide-react"
 import Image from "next/image"
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5 mr-2" /> },
   { href: "/dashboard/assessment-reports", label: "Assessment Reports", icon: <FileText className="h-5 w-5 mr-2" /> },
   { href: "/dashboard/cutover-runbooks", label: "Cutover Runbooks", icon: <BookText className="h-5 w-5 mr-2" /> },
+  { href: "/test-azure-architecture", label: "Azure Architecture Demo", icon: <Network className="h-5 w-5 mr-2" /> },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

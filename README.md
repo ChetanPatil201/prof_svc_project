@@ -39,11 +39,32 @@ cd prof-svc-project
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Azure OpenAI credentials
+
 # Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to access the application.
+
+### Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-azure-openai-endpoint.azure.com/
+AZURE_OPENAI_KEY=your-azure-openai-key-here
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+
+# Application Configuration
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+**Important**: Never commit your actual Azure OpenAI keys to the repository. Use environment variables for all sensitive credentials.
 
 ## Disk Constraints Usage
 

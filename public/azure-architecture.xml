@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="5.0" etag="xxx" version="22.1.16" type="device">
+  <diagram name="Azure CAF Architecture" id="azure-caf-arch">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Management Groups -->
+        
+        
+        <!-- Subscription Containers -->
+        
+        
+        <!-- Nodes -->
+        
+        <!-- Node: On-premises network -->
+        <mxCell id="on-premises" value="On-premises network" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="46" y="306" width="160" height="226" as="geometry" />
+        </mxCell>
+        <mxCell id="on-premises-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/general/10001-icon-service-Resource-Groups.svg;" vertex="1" parent="1">
+          <mxGeometry x="51" y="311" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: On-premises VMs (n) -->
+        <mxCell id="on-prem-vms" value="On-premises VMs (n)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="on-premises">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="on-prem-vms-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="on-premises">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Users/Branch -->
+        <mxCell id="on-prem-users" value="Users/Branch" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="on-premises">
+          <mxGeometry x="20" y="136" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="on-prem-users-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/general/10001-icon-service-Resource-Groups.svg;" vertex="1" parent="on-premises">
+          <mxGeometry x="25" y="141" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Hub virtual network (10.0.0.0/16) -->
+        <mxCell id="hub-vnet" value="Hub virtual network (..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="100" width="250" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="hub-vnet-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10061-icon-service-Virtual-Networks.svg;" vertex="1" parent="1">
+          <mxGeometry x="495" y="105" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: AzureRouteServerSubnet (10.0.4.0/27) -->
+        <mxCell id="subnet-hub-routeserver" value="AzureRouteServerSubne..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="132" y="138" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-hub-routeserver-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="137" y="143" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Route Server -->
+        <mxCell id="route-server" value="Route Server" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-hub-routeserver">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="route-server-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/general/10001-icon-service-Resource-Groups.svg;" vertex="1" parent="subnet-hub-routeserver">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: DNS Private Resolver (10.0.5.0/26) -->
+        <mxCell id="subnet-hub-dns" value="DNS Private Resolver ..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="-4" y="138" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-hub-dns-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="1" y="143" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: DNS Private Resolver -->
+        <mxCell id="dns-resolver" value="DNS Private Resolver" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-hub-dns">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="dns-resolver-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10064-icon-service-DNS-Zones.svg;" vertex="1" parent="subnet-hub-dns">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: AzureFirewallSubnet (10.0.1.0/26) -->
+        <mxCell id="subnet-hub-firewall" value="AzureFirewallSubnet (..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="-4" y="52" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-hub-firewall-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="1" y="57" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Azure Firewall -->
+        <mxCell id="azure-firewall" value="Azure Firewall" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-hub-firewall">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="azure-firewall-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10084-icon-service-Firewalls.svg;" vertex="1" parent="subnet-hub-firewall">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: GatewaySubnet (10.0.2.0/27) -->
+        <mxCell id="subnet-hub-gateway" value="GatewaySubnet (10.0.2..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="-390" y="0" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-hub-gateway-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="-385" y="5" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: AzureBastionSubnet (10.0.3.0/26) -->
+        <mxCell id="subnet-hub-bastion" value="AzureBastionSubnet (1..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="132" y="52" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-hub-bastion-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="137" y="57" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Azure Bastion -->
+        <mxCell id="bastion" value="Azure Bastion" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-hub-bastion">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="bastion-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02422-icon-service-Bastions.svg;" vertex="1" parent="subnet-hub-bastion">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Application Gateway -->
+        <mxCell id="app-gateway" value="Application Gateway" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="16" y="16" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="app-gateway-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10076-icon-service-Application-Gateways.svg;" vertex="1" parent="hub-vnet">
+          <mxGeometry x="21" y="21" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Production spoke virtual network (10.1.0.0/16) -->
+        <mxCell id="spoke-prod-vnet" value="Production spoke virt..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="706" y="66" width="258" height="372" as="geometry" />
+        </mxCell>
+        <mxCell id="spoke-prod-vnet-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10061-icon-service-Virtual-Networks.svg;" vertex="1" parent="1">
+          <mxGeometry x="711" y="71" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Subnet (10.1.1.0/24) -->
+        <mxCell id="subnet-prod-web" value="Web Subnet (10.1.1.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="16" y="16" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-prod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="21" y="21" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Subnet (10.1.2.0/24) -->
+        <mxCell id="subnet-prod-app" value="App Subnet (10.1.2.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="16" y="122" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-prod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="21" y="127" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: DB Subnet (10.1.3.0/24) -->
+        <mxCell id="subnet-prod-db" value="DB Subnet (10.1.3.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="16" y="228" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-prod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-prod-vnet">
+          <mxGeometry x="21" y="233" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Non-production spoke virtual network (10.2.0.0/16) -->
+        <mxCell id="spoke-nonprod-vnet" value="Non-production spoke ..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="926" y="116" width="258" height="372" as="geometry" />
+        </mxCell>
+        <mxCell id="spoke-nonprod-vnet-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10061-icon-service-Virtual-Networks.svg;" vertex="1" parent="1">
+          <mxGeometry x="931" y="121" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Subnet (10.2.1.0/24) -->
+        <mxCell id="subnet-nonprod-web" value="Web Subnet (10.2.1.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="16" y="16" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-nonprod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="21" y="21" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Subnet (10.2.2.0/24) -->
+        <mxCell id="subnet-nonprod-app" value="App Subnet (10.2.2.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="16" y="122" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-nonprod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="21" y="127" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: DB Subnet (10.2.3.0/24) -->
+        <mxCell id="subnet-nonprod-db" value="DB Subnet (10.2.3.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="16" y="228" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="subnet-nonprod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/02742-icon-service-Subnet.svg;" vertex="1" parent="spoke-nonprod-vnet">
+          <mxGeometry x="21" y="233" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Tier (2) • Standard_D2s_v3 -->
+        <mxCell id="tier-prod-web" value="Web Tier (2) • Standa..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-prod-web">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-prod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-prod-web">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Load Balancer -->
+        <mxCell id="lb-prod-web" value="Web Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-prod-web">
+          <mxGeometry x="-622" y="18" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-prod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-prod-web">
+          <mxGeometry x="-617" y="23" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Tier (2) • Standard_D4s_v3 -->
+        <mxCell id="tier-prod-app" value="App Tier (2) • Standa..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-prod-app">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-prod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-prod-app">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Load Balancer -->
+        <mxCell id="lb-prod-app" value="App Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-prod-app">
+          <mxGeometry x="-622" y="-88" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-prod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-prod-app">
+          <mxGeometry x="-617" y="-83" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Db Tier (1) • Standard_D8s_v3 -->
+        <mxCell id="tier-prod-db" value="Db Tier (1) • Standar..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-prod-db">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-prod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-prod-db">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Db Load Balancer -->
+        <mxCell id="lb-prod-db" value="Db Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-prod-db">
+          <mxGeometry x="-622" y="-194" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-prod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-prod-db">
+          <mxGeometry x="-617" y="-189" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Tier (1) • Standard_D2s_v3 -->
+        <mxCell id="tier-nonprod-web" value="Web Tier (1) • Standa..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-nonprod-web">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-nonprod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-nonprod-web">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Web Load Balancer -->
+        <mxCell id="lb-nonprod-web" value="Web Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-nonprod-web">
+          <mxGeometry x="-842" y="-32" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-nonprod-web-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-nonprod-web">
+          <mxGeometry x="-837" y="-27" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Tier (1) • Standard_D2s_v3 -->
+        <mxCell id="tier-nonprod-app" value="App Tier (1) • Standa..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-nonprod-app">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-nonprod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-nonprod-app">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: App Load Balancer -->
+        <mxCell id="lb-nonprod-app" value="App Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-nonprod-app">
+          <mxGeometry x="-842" y="-138" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-nonprod-app-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-nonprod-app">
+          <mxGeometry x="-837" y="-133" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Db Tier (1) • Standard_D4s_v3 -->
+        <mxCell id="tier-nonprod-db" value="Db Tier (1) • Standar..." style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e8f5e8;strokeColor=#388e3c;fontStyle=1;" vertex="1" parent="subnet-nonprod-db">
+          <mxGeometry x="20" y="50" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="tier-nonprod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/compute/10021-icon-service-Virtual-Machine.svg;" vertex="1" parent="subnet-nonprod-db">
+          <mxGeometry x="25" y="55" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Db Load Balancer -->
+        <mxCell id="lb-nonprod-db" value="Db Load Balancer" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="subnet-nonprod-db">
+          <mxGeometry x="-842" y="-244" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lb-nonprod-db-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/networking/10062-icon-service-Load-Balancers.svg;" vertex="1" parent="subnet-nonprod-db">
+          <mxGeometry x="-837" y="-239" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Observability -->
+        <mxCell id="observability" value="Observability" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="1">
+          <mxGeometry x="600" y="460" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="observability-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/monitor/00001-icon-service-Monitor.svg;" vertex="1" parent="1">
+          <mxGeometry x="605" y="465" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Azure Monitor -->
+        <mxCell id="monitor" value="Azure Monitor" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="observability">
+          <mxGeometry x="0" y="90" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="monitor-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/monitor/00001-icon-service-Monitor.svg;" vertex="1" parent="observability">
+          <mxGeometry x="5" y="95" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Log Analytics -->
+        <mxCell id="log-analytics" value="Log Analytics" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="observability">
+          <mxGeometry x="0" y="180" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="log-analytics-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/monitor/00009-icon-service-Log-Analytics-Workspaces.svg;" vertex="1" parent="observability">
+          <mxGeometry x="5" y="185" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Key Vault -->
+        <mxCell id="key-vault" value="Key Vault" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="1">
+          <mxGeometry x="750" y="460" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="key-vault-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/security/10245-icon-service-Key-Vaults.svg;" vertex="1" parent="1">
+          <mxGeometry x="755" y="465" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Azure SQL Database -->
+        <mxCell id="sql-database" value="Azure SQL Database" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#fff3e0;strokeColor=#f57c00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="580" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sql-database-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/databases/10130-icon-service-SQL-Database.svg;" vertex="1" parent="1">
+          <mxGeometry x="605" y="585" width="30" height="30" as="geometry" />
+        </mxCell>
+        <!-- Node: Storage Account -->
+        <mxCell id="storage-account" value="Storage Account" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;fontStyle=0;fillColor=#fff3e0;strokeColor=#f57c00;" vertex="1" parent="1">
+          <mxGeometry x="600" y="670" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="storage-account-icon" value="" style="shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=/Azure_Public_Service_Icons/Icons/storage/10002-icon-service-Storage-Accounts.svg;" vertex="1" parent="1">
+          <mxGeometry x="605" y="675" width="30" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Edges -->
+        
+        <!-- Edge: hub-vnet -> spoke-prod-vnet -->
+        <mxCell id="edge-hub-vnet-spoke-prod-vnet" value="VNet peering" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#1976d2;" edge="1" parent="1" source="hub-vnet" target="spoke-prod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: hub-vnet -> spoke-nonprod-vnet -->
+        <mxCell id="edge-hub-vnet-spoke-nonprod-vnet" value="VNet peering" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#1976d2;" edge="1" parent="1" source="hub-vnet" target="spoke-nonprod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: app-gateway -> tier-prod-web -->
+        <mxCell id="edge-app-gateway-tier-prod-web" value="Ingress" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#4caf50;" edge="1" parent="1" source="app-gateway" target="tier-prod-web">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: app-gateway -> tier-nonprod-web -->
+        <mxCell id="edge-app-gateway-tier-nonprod-web" value="Ingress" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#4caf50;" edge="1" parent="1" source="app-gateway" target="tier-nonprod-web">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: tier-prod-web -> tier-prod-app -->
+        <mxCell id="edge-tier-prod-web-tier-prod-app" value="East-West" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2196f3;" edge="1" parent="1" source="tier-prod-web" target="tier-prod-app">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: tier-prod-app -> tier-prod-db -->
+        <mxCell id="edge-tier-prod-app-tier-prod-db" value="East-West" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2196f3;" edge="1" parent="1" source="tier-prod-app" target="tier-prod-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: tier-nonprod-web -> tier-nonprod-app -->
+        <mxCell id="edge-tier-nonprod-web-tier-nonprod-app" value="East-West" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2196f3;" edge="1" parent="1" source="tier-nonprod-web" target="tier-nonprod-app">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: tier-nonprod-app -> tier-nonprod-db -->
+        <mxCell id="edge-tier-nonprod-app-tier-nonprod-db" value="East-West" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#2196f3;" edge="1" parent="1" source="tier-nonprod-app" target="tier-nonprod-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: bastion -> spoke-prod-vnet -->
+        <mxCell id="edge-bastion-spoke-prod-vnet" value="Mgmt" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#9c27b0;" edge="1" parent="1" source="bastion" target="spoke-prod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: bastion -> spoke-nonprod-vnet -->
+        <mxCell id="edge-bastion-spoke-nonprod-vnet" value="Mgmt" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#9c27b0;" edge="1" parent="1" source="bastion" target="spoke-nonprod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: observability -> spoke-prod-vnet -->
+        <mxCell id="edge-observability-spoke-prod-vnet" value="Diag/Logs" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#607d8b;" edge="1" parent="1" source="observability" target="spoke-prod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: observability -> spoke-nonprod-vnet -->
+        <mxCell id="edge-observability-spoke-nonprod-vnet" value="Diag/Logs" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#607d8b;" edge="1" parent="1" source="observability" target="spoke-nonprod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: key-vault -> tier-prod-app -->
+        <mxCell id="edge-key-vault-tier-prod-app" value="Secrets" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d32f2f;" edge="1" parent="1" source="key-vault" target="tier-prod-app">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: key-vault -> tier-prod-db -->
+        <mxCell id="edge-key-vault-tier-prod-db" value="Secrets" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d32f2f;" edge="1" parent="1" source="key-vault" target="tier-prod-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: key-vault -> tier-nonprod-app -->
+        <mxCell id="edge-key-vault-tier-nonprod-app" value="Secrets" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d32f2f;" edge="1" parent="1" source="key-vault" target="tier-nonprod-app">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: key-vault -> tier-nonprod-db -->
+        <mxCell id="edge-key-vault-tier-nonprod-db" value="Secrets" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d32f2f;" edge="1" parent="1" source="key-vault" target="tier-nonprod-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: sql-database -> spoke-prod-vnet -->
+        <mxCell id="edge-sql-database-spoke-prod-vnet" value="PE ×1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#f57c00;" edge="1" parent="1" source="sql-database" target="spoke-prod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: sql-database -> spoke-nonprod-vnet -->
+        <mxCell id="edge-sql-database-spoke-nonprod-vnet" value="PE ×1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#f57c00;" edge="1" parent="1" source="sql-database" target="spoke-nonprod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: storage-account -> spoke-prod-vnet -->
+        <mxCell id="edge-storage-account-spoke-prod-vnet" value="PE ×1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#f57c00;" edge="1" parent="1" source="storage-account" target="spoke-prod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Edge: storage-account -> spoke-nonprod-vnet -->
+        <mxCell id="edge-storage-account-spoke-nonprod-vnet" value="PE ×1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#f57c00;" edge="1" parent="1" source="storage-account" target="spoke-nonprod-vnet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        
+        <!-- Legend -->
+        <mxCell id="legend-container" value="Legend" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeParentMin=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#666666;fontColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="50" width="200" height="250" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend Items -->
+        <mxCell id="legend-vnet" value="Virtual Networks" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="40" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-vnet-color" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;" vertex="1" parent="legend-container">
+          <mxGeometry x="140" y="40" width="20" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-subnet" value="Subnets" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="65" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-subnet-color" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e8;strokeColor=#388e3c;" vertex="1" parent="legend-container">
+          <mxGeometry x="140" y="65" width="20" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-tier" value="Tier Nodes" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="90" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-tier-color" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0277bd;" vertex="1" parent="legend-container">
+          <mxGeometry x="140" y="90" width="20" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="legend-peering" value="VNet Peering" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="115" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-peering-line" value="" style="endArrow=classic;html=1;strokeColor=#1976d2;strokeWidth=2;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="125" as="sourcePoint" />
+            <mxPoint x="170" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="legend-pe" value="Private Endpoint" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="140" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-pe-line" value="" style="endArrow=classic;html=1;strokeColor=#f57c00;strokeWidth=2;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="150" as="sourcePoint" />
+            <mxPoint x="170" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="legend-management" value="Management" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="165" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-management-line" value="" style="endArrow=classic;html=1;strokeColor=#607d8b;strokeWidth=2;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="175" as="sourcePoint" />
+            <mxPoint x="170" y="175" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="legend-dashed" value="Dashed = Governance" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;" vertex="1" parent="legend-container">
+          <mxGeometry x="10" y="190" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-dashed-line" value="" style="endArrow=classic;html=1;strokeColor=#666666;strokeWidth=2;strokeStyle=2;" edge="1" parent="legend-container">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="200" as="sourcePoint" />
+            <mxPoint x="170" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

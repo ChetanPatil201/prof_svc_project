@@ -211,4 +211,4 @@ az monitor metrics list \
 - **ACR Basic:** ~$5/month
 - **Total estimated cost:** $15-35/month
 
-For higher traffic, consider migrating to Azure Container Apps or App Service. 
+For higher traffic, consider migrating to Azure Container Apps or App Service.

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@reactflow/node-resizer": "^2.2.14",
     "docx": "^9.5.1",
     "docxtemplater": "^3.65.2",
     "lucide-react": "^0.525.0",
@@ -19,6 +20,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "reactflow": "^11.11.4",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

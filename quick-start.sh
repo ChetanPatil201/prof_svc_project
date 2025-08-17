@@ -1,55 +1,57 @@
 #!/bin/bash
 
 echo "🚀 Quick Start - Docker Compose Deployment"
-echo "=========================================="
-echo ""
 
-# Check if .env.local exists
-if [ ! -f .env.local ]; then
-    echo "❌ .env.local file not found!"
-    echo "Please create a .env.local file with your Azure OpenAI credentials:"
-    echo "AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/"
-    echo "AZURE_OPENAI_KEY=your-azure-openai-key-here"
-    echo "AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo"
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker Desktop first."
     exit 1
 fi
 
-echo "✅ Environment file found"
-echo ""
+# Check if docker-compose.yml exists
+if [ ! -f "docker-compose.yml" ]; then
+    echo "❌ docker-compose.yml not found. Please run this script from the project root."
+    exit 1
+fi
+
+# Set environment variables
+export NODE_ENV=development
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+export AZURE_OPENAI_KEY="your-azure-openai-key-here"
+export AZURE_OPENAI_DEPLOYMENT="gpt-35-turbo"
+
+echo "Environment variables:"
+echo "NODE_ENV=$NODE_ENV"
+echo "AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT"
+echo "AZURE_OPENAI_DEPLOYMENT=$AZURE_OPENAI_DEPLOYMENT"
 
 # Stop any existing containers
-echo "🛑 Stopping any existing containers..."
-/Applications/Docker.app/Contents/Resources/bin/docker compose -f docker-compose.prod.yml down 2>/dev/null
+echo "Stopping existing containers..."
+docker compose down
 
-# Start the application
-echo "🐳 Starting application with Docker Compose..."
-/Applications/Docker.app/Contents/Resources/bin/docker compose -f docker-compose.prod.yml up -d
+# Build and start containers
+echo "Building and starting containers..."
+docker compose up --build -d
 
-echo ""
-echo "⏳ Waiting for application to start..."
-sleep 10
-
-# Test the application
-echo "🧪 Testing application..."
-MAIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
-API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/test-endpoint)
-
-echo "📱 Main page: HTTP $MAIN_STATUS"
-echo "🔌 API endpoint: HTTP $API_STATUS"
-
-if [ "$MAIN_STATUS" = "200" ] && [ "$API_STATUS" = "200" ]; then
+# Check if containers started successfully
+if [ $? -eq 0 ]; then
+    echo "✅ Application started successfully!"
+    echo "🌐 Your app is available at: http://localhost:3000"
     echo ""
-    echo "🎉 SUCCESS! Application is running correctly!"
-    echo "📱 Access your application at: http://localhost:3000"
+    echo "📊 Container status:"
+    docker compose ps
     echo ""
-    echo "📋 Management Commands:"
-    echo "  View logs:   docker compose -f docker-compose.prod.yml logs -f"
-    echo "  Stop app:    docker compose -f docker-compose.prod.yml down"
-    echo "  Restart:     docker compose -f docker-compose.prod.yml restart"
-    echo "  Status:      docker compose -f docker-compose.prod.yml ps"
-    echo "  Rebuild:     docker compose -f docker-compose.prod.yml up --build -d"
+    echo "📋 To view logs:"
+    echo "docker compose logs -f"
+    echo ""
+    echo "🛑 To stop application:"
+    echo "docker compose down"
+    echo ""
+    echo "🔄 To restart application:"
+    echo "docker compose restart"
 else
-    echo ""
-    echo "⚠️  Application started but some endpoints may have issues."
-    echo "Check logs: docker compose -f docker-compose.prod.yml logs"
-fi 
+    echo "❌ Failed to start application!"
+    echo "📋 Checking logs..."
+    docker compose logs
+    exit 1
+fi

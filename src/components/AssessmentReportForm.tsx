@@ -73,7 +73,7 @@ function parsePipeTable(tableString: string) {
   });
 }
 
-export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }) {
+export function AssessmentReportForm({ onComplete }: { onComplete?: (assessment: AssessmentReportData) => void }) {
   const [azureReport, setAzureReport] = useState<File | null>(null)
   const [azureReport1Yr, setAzureReport1Yr] = useState<File | null>(null);
   const [azureReport3Yr, setAzureReport3Yr] = useState<File | null>(null);
@@ -756,7 +756,7 @@ ${rulesAndConstraints ? `9. STRICTLY FOLLOW the custom rules and constraints pro
 
       setReportData(assessmentData);
       setShowSuccessMessage(true);
-      if (onComplete) onComplete();
+      if (onComplete) onComplete(assessmentData);
       
       console.log("✅ [Form Submit] Assessment completed successfully. User can now download report and start new assessment when ready.");
     } catch (err: any) {

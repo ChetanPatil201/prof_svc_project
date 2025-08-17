@@ -119,7 +119,6 @@ export function parseMigrateReport(input: any): VMWorkload[] {
 
 // Fetch Azure VM pricing from Azure Retail Prices API
 export async function fetchAzureVmPricing(region: string, osType: string): Promise<any[]> {
-  console.log("🔍 [Azure Pricing] Fetching pricing for region:", region, "OS:", osType);
   
   const apiUrl =
     "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview";
@@ -145,7 +144,6 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
         
         if (!res.ok) {
           const errorText = await res.text();
-          console.error("❌ [Azure Pricing] API Error:", errorText);
           throw new Error(`Failed to fetch Azure pricing: ${res.status} - ${errorText}`);
         }
         

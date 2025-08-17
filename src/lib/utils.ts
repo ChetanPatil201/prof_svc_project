@@ -845,7 +845,6 @@ export async function retryWithBackoff<T>(
       lastError = error as Error;
       
       if (attempt === maxRetries) {
-        console.error(`❌ [Retry] Final attempt failed after ${maxRetries + 1} tries:`, error);
         throw lastError;
       }
       
@@ -853,8 +852,6 @@ export async function retryWithBackoff<T>(
       const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
       const jitter = Math.random() * 0.1 * delay; // Add 10% jitter
       const totalDelay = delay + jitter;
-      
-      console.warn(`⚠️ [Retry] Attempt ${attempt + 1} failed, retrying in ${Math.round(totalDelay)}ms:`, error);
       
       // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, totalDelay));
@@ -864,33 +861,4 @@ export async function retryWithBackoff<T>(
   throw lastError!;
 } 
 
-// Test function to verify disk constraint application
-export async function testDiskConstraintApplication(data: AssessmentReportData): Promise<void> {
-  console.log("🧪 [Disk Test] Testing disk constraint application");
-  
-  if (!data.rulesAndConstraints || !data.payAsYouGoData?.disks) {
-    console.log("🧪 [Disk Test] No constraints or disk data to test");
-    return;
-  }
-  
-  console.log(`🧪 [Disk Test] Testing ${data.payAsYouGoData.disks.length} disks with constraints: ${data.rulesAndConstraints}`);
-  
-  // Test original data
-  const originalPremiumDisks = data.payAsYouGoData.disks.filter(disk => 
-    disk.recommendedDiskType?.toLowerCase().includes('premium')
-  );
-  console.log(`🧪 [Disk Test] Original premium disks: ${originalPremiumDisks.length}`);
-  
-  // Test constrained data
-  const constrainedDisks = await getConstrainedDiskData(data);
-  const constrainedPremiumDisks = constrainedDisks.filter(disk => 
-    disk.recommendedDiskType?.toLowerCase().includes('premium')
-  );
-  console.log(`🧪 [Disk Test] Constrained premium disks: ${constrainedPremiumDisks.length}`);
-  
-  if (originalPremiumDisks.length > constrainedPremiumDisks.length) {
-    console.log("✅ [Disk Test] Constraints successfully reduced premium disk count");
-  } else {
-    console.log("⚠️ [Disk Test] No premium disk reduction detected");
-  }
-} 
+ 
