@@ -97,7 +97,7 @@ az containerapp create \
   --registry-password $(az acr credential show --name profsvcregistry --query "passwords[0].value" -o tsv) \
   --env-vars \
     AZURE_OPENAI_ENDPOINT=https://cp-azureopenai.openai.azure.com/ \
-    AZURE_OPENAI_KEY=***REMOVED*** \
+    AZURE_OPENAI_KEY=your-azure-openai-key-here \
     AZURE_OPENAI_DEPLOYMENT=gpt-4o \
     NODE_ENV=production
 ```
