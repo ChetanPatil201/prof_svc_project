@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path d="M32 4L56 16V32C56 44.15 45.15 54 32 54C18.85 54 8 44.15 8 32V16L32 4Z" fill="#0078D4" stroke="#005A9E" stroke-width="2"/>
+  
+  <!-- Shield highlight -->
+  <path d="M32 8L50 18V32C50 41.94 42.94 48 32 48C21.06 48 14 41.94 14 32V18L32 8Z" fill="#40A9FF" opacity="0.3"/>
+  
+  <!-- Lock icon -->
+  <rect x="24" y="28" width="16" height="12" rx="2" fill="#FF6B6B"/>
+  <rect x="26" y="26" width="12" height="6" rx="2" fill="#FF6B6B"/>
+  <circle cx="32" cy="34" r="2" fill="white"/>
+  
+  <!-- Security checkmark -->
+  <path d="M28 38L32 42L40 34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

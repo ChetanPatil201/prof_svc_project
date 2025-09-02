@@ -117,9 +117,22 @@ export function parseMigrateReport(input: any): VMWorkload[] {
   return Array.isArray(input) ? input : [];
 }
 
+// Cache for Azure pricing data to reduce API calls
+const pricingCache = new Map<string, any>();
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
 // Fetch Azure VM pricing from Azure Retail Prices API
 export async function fetchAzureVmPricing(region: string, osType: string): Promise<any[]> {
-  console.log("🔍 [Azure Pricing] Fetching pricing for region:", region, "OS:", osType);
+  const cacheKey = `${region}-${osType}`;
+  const cached = pricingCache.get(cacheKey);
+  
+  // Check if we have valid cached data
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    console.log(`📦 [Azure Pricing] Using cached data for ${region} ${osType}`);
+    return cached.data;
+  }
+  
+  console.log(`🔍 [Azure Pricing] Fetching fresh data for ${region} ${osType}`);
   
   const apiUrl =
     "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview";
@@ -145,13 +158,17 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
         
         if (!res.ok) {
           const errorText = await res.text();
-          console.error("❌ [Azure Pricing] API Error:", errorText);
+          if (res.status === 429) {
+            console.log(`⏳ [Azure Pricing] Rate limited, waiting 60 seconds...`);
+            await delay(60000); // Wait 60 seconds for rate limit
+            throw new Error(`Rate limited, retrying...`);
+          }
           throw new Error(`Failed to fetch Azure pricing: ${res.status} - ${errorText}`);
         }
         
         const data = await res.json();
         return data;
-      }, 2, 500, 5000); // 2 retries, 500ms base delay, 5s max delay
+      }, 3, 1000, 10000); // 3 retries, 1s base delay, 10s max delay
       
       if (pageData.Items) {
         results.push(
@@ -242,6 +259,12 @@ export async function fetchAzureVmPricing(region: string, osType: string): Promi
   
   const finalResults = Object.values(grouped);
   console.log("🔍 [Azure Pricing] Fetched", finalResults.length, "prices for", region, osType);
+  
+  // Cache the results
+  pricingCache.set(cacheKey, {
+    data: finalResults,
+    timestamp: Date.now()
+  });
   
   return finalResults;
 }
@@ -436,75 +459,114 @@ export function transformAssessmentProperty(raw: any): AssessmentPropertyRow {
   return transformKeys<AssessmentPropertyRow>(raw, { 'Property': 'property', 'Selected value': 'selectedValue' });
 }
 
+// Helper function to add delay between API calls
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Recommend VM size for each workload
 export async function recommendVmSizes(workloads: any[]): Promise<VMRecommendation[]> {
   console.log("🔍 [VM Recommendation] Starting VM size recommendations for", workloads.length, "workloads");
   const recommendations: VMRecommendation[] = [];
   
-  for (const vm of workloads) {
-    console.log("🔍 [VM Recommendation] Processing VM:", vm.vmName);
+  // Group VMs by region and OS type to minimize API calls
+  const vmGroups = new Map<string, any[]>();
+  workloads.forEach(vm => {
+    const key = `${vm.region}-${vm.osType}`;
+    if (!vmGroups.has(key)) {
+      vmGroups.set(key, []);
+    }
+    vmGroups.get(key)!.push(vm);
+  });
+  
+  console.log(`📊 [VM Recommendation] Grouped into ${vmGroups.size} API calls instead of ${workloads.length}`);
+  
+  for (const [groupKey, groupVMs] of vmGroups) {
+    const [region, osType] = groupKey.split('-');
+    console.log(`🔍 [VM Recommendation] Processing group: ${region} ${osType} (${groupVMs.length} VMs)`);
+    
     try {
-      const prices = await fetchAzureVmPricing(vm.region, vm.osType);
+      // Fetch pricing once for the entire group
+      const prices = await fetchAzureVmPricing(region, osType);
       
-      let match = null;
-      // 1. Try to match on recommendedSize (armSkuName) if provided
-      if (vm.recommendedSize) {
-        const rec = String(vm.recommendedSize).toLowerCase();
-        match = prices.find(
-          (sku) => {
-            if (!sku.sku) return false;
-            const s = sku.sku.toLowerCase();
-            return (
-              s === rec ||
-              s.replace(/_/g, '-') === rec.replace(/_/g, '-') ||
-              s.replace(/_/g, ' ') === rec.replace(/_/g, ' ') ||
-              s.replace(/-/g, '_') === rec.replace(/-/g, '_')
-            );
-          }
-        );
-      }
-      // 2. Fallback: Find the smallest SKU that fits the workload (focus on cores, memory is optional)
-      if (!match) {
-        match = prices.find(
-          (sku) => {
-            // Must have enough cores
-            if (!sku.cores || sku.cores < vm.cores) return false;
-            
-            // If we have memory info for both, check memory too
-            if (sku.memoryGB && vm.memoryGB) {
-              return sku.memoryGB >= vm.memoryGB;
+      // Process each VM in the group
+      for (const vm of groupVMs) {
+        console.log("🔍 [VM Recommendation] Processing VM:", vm.vmName);
+        
+        // Add small delay between VM processing to avoid overwhelming the system
+        if (groupVMs.indexOf(vm) > 0) {
+          await delay(100); // 100ms delay between VMs
+        }
+        
+        let match = null;
+        // 1. Try to match on recommendedSize (armSkuName) if provided
+        if (vm.recommendedSize) {
+          const rec = String(vm.recommendedSize).toLowerCase();
+          match = prices.find(
+            (sku) => {
+              if (!sku.sku) return false;
+              const s = sku.sku.toLowerCase();
+              return (
+                s === rec ||
+                s.replace(/_/g, '-') === rec.replace(/_/g, '-') ||
+                s.replace(/_/g, ' ') === rec.replace(/_/g, ' ') ||
+                s.replace(/-/g, '_') === rec.replace(/-/g, '_')
+              );
             }
-            
-            // If no memory info for SKU, just check cores
-            return true;
-          }
-        );
-      }
-      if (match) {
-        recommendations.push({
-          vmName: vm.vmName,
-          recommendedSize: match.sku,
-          pricePerMonthUSD: match.pricePerMonthUSD,
-          details: match,
-        });
-        console.log("✅ [VM Recommendation] Found match for", vm.vmName, ":", match.sku);
-      } else {
-        recommendations.push({
-          vmName: vm.vmName,
-          recommendedSize: "No suitable SKU found",
-          pricePerMonthUSD: 0,
-          details: null,
-        });
-        console.log("⚠️ [VM Recommendation] No suitable SKU found for", vm.vmName);
+          );
+        }
+        // 2. Fallback: Find the smallest SKU that fits the workload (focus on cores, memory is optional)
+        if (!match) {
+          match = prices.find(
+            (sku) => {
+              // Must have enough cores
+              if (!sku.cores || sku.cores < vm.cores) return false;
+              
+              // If we have memory info for both, check memory too
+              if (sku.memoryGB && vm.memoryGB) {
+                return sku.memoryGB >= vm.memoryGB;
+              }
+              
+              // If no memory info for SKU, just check cores
+              return true;
+            }
+          );
+        }
+        if (match) {
+          recommendations.push({
+            vmName: vm.vmName,
+            recommendedSize: match.sku,
+            pricePerMonthUSD: match.pricePerMonthUSD,
+            details: match,
+          });
+          console.log("✅ [VM Recommendation] Found match for", vm.vmName, ":", match.sku);
+        } else {
+          recommendations.push({
+            vmName: vm.vmName,
+            recommendedSize: "No suitable SKU found",
+            pricePerMonthUSD: 0,
+            details: null,
+          });
+          console.log("⚠️ [VM Recommendation] No suitable SKU found for", vm.vmName);
+        }
       }
     } catch (error) {
-      console.error("❌ [VM Recommendation] Error processing VM", vm.vmName, ":", error);
-      recommendations.push({
-        vmName: vm.vmName,
-        recommendedSize: "Error fetching pricing",
-        pricePerMonthUSD: 0,
-        details: { error: error instanceof Error ? error.message : String(error) },
-      });
+      console.error("❌ [VM Recommendation] Error processing group", groupKey, ":", error);
+      // Add error entries for all VMs in this group
+      for (const vm of groupVMs) {
+        recommendations.push({
+          vmName: vm.vmName,
+          recommendedSize: "Error fetching pricing",
+          pricePerMonthUSD: 0,
+          details: { error: error instanceof Error ? error.message : String(error) },
+        });
+      }
+    }
+    
+    // Add delay between groups to respect rate limits
+    if (Array.from(vmGroups.keys()).indexOf(groupKey) < vmGroups.size - 1) {
+      console.log(`⏳ [VM Recommendation] Waiting 2 seconds before next group...`);
+      await delay(2000); // 2 second delay between groups
     }
   }
   

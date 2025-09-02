@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="28" fill="#6F42C1" stroke="#5A32A3" stroke-width="2"/>
+  
+  <!-- Brain outline -->
+  <path d="M20 24C20 20 24 16 28 16C32 16 36 20 36 24C36 28 32 32 28 32C24 32 20 28 20 24Z" fill="white" opacity="0.9"/>
+  <path d="M28 36C28 32 32 28 36 28C40 28 44 32 44 36C44 40 40 44 36 44C32 44 28 40 28 36Z" fill="white" opacity="0.9"/>
+  
+  <!-- Neural connections -->
+  <path d="M28 32L36 28" stroke="white" stroke-width="2" opacity="0.7"/>
+  <path d="M32 24L32 36" stroke="white" stroke-width="2" opacity="0.7"/>
+  <path d="M24 28L40 40" stroke="white" stroke-width="2" opacity="0.7"/>
+  <path d="M40 28L24 40" stroke="white" stroke-width="2" opacity="0.7"/>
+  
+  <!-- AI nodes -->
+  <circle cx="28" cy="24" r="3" fill="#FFD700"/>
+  <circle cx="36" cy="28" r="3" fill="#FFD700"/>
+  <circle cx="28" cy="36" r="3" fill="#FFD700"/>
+  <circle cx="36" cy="40" r="3" fill="#FFD700"/>
+  <circle cx="32" cy="32" r="4" fill="#FFD700"/>
+  
+  <!-- Circuit pattern -->
+  <path d="M16 16L20 16" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <path d="M44 16L48 16" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <path d="M16 48L20 48" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  <path d="M44 48L48 48" stroke="white" stroke-width="1.5" opacity="0.6"/>
+</svg>

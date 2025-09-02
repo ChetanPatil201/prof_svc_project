@@ -25,11 +25,7 @@ export function RunbookForm({ disabled }: { disabled?: boolean }) {
     setIsSubmitting(true)
 
     // In a real application, you would send these files to a server
-    // For now, we'll just log them and show a success message.
-    console.log("--- Runbook Generation Request ---")
-    console.log("Selected Assessment Report ID:", assessmentReportId)
-    console.log("Meeting Transcript:", meetingTranscript?.name)
-    console.log("User Notes for Runbook:", userNotes)
+    // For now, we'll just show a success message.
 
     // Simulate AI processing and runbook generation
     await new Promise((resolve) => setTimeout(resolve, 2500))

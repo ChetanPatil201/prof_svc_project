@@ -1,11 +1,12 @@
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { FileText, NotebookPen, MessageSquareText, FolderOpen, UploadCloud, RotateCcw } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { FileText, NotebookPen, MessageSquareText, FolderOpen, UploadCloud, RotateCcw, Network, Eye, EyeOff } from "lucide-react"
 import * as XLSX from "xlsx"
 import Papa from "papaparse"
 import type { ParseResult, ParseError } from "papaparse"
@@ -14,6 +15,34 @@ import { fetchAzureVmPricing, fetchAzureVmPriceDirect } from '@/lib/azureVmAnaly
 import { AssessmentReportData } from '@/types/assessmentReport';
 import { retryWithBackoff } from '@/lib/utils';
 import AssessmentFileUpload from "./AssessmentFileUpload";
+
+/**
+ * AssessmentReportForm Component
+ * 
+ * Enhanced with Architecture Diagram Generation
+ * 
+ * This component now integrates the AzureIconDiagramViewer to provide
+ * AI-powered Azure architecture diagrams with Azure service icons based on assessment data.
+ * 
+ * Key Features:
+ * - File upload and parsing for Azure Migrate assessment data
+ * - AI-powered VM sizing and cost optimization
+ * - Architecture diagram generation using Azure OpenAI
+ * - Interactive diagram viewing with zoom, fullscreen, and download
+ * 
+ * Integration Points:
+ * - Diagram generation triggered after successful assessment
+ * - Data transformation from assessment format to diagram format
+ * - Error handling and user feedback
+ * - State management for diagram visibility and data
+ * 
+ * Future Extensions:
+ * - Real-time diagram updates when assessment data changes
+ * - Multiple diagram templates and styles
+ * - Collaborative diagram editing
+ * - Export diagrams to various formats (SVG, PDF, etc.)
+ * - Integration with Azure DevOps for deployment pipelines
+ */
 
 // Improved pipe table parser: extract only the first markdown table
 function parsePipeTable(tableString: string) {
@@ -73,7 +102,7 @@ function parsePipeTable(tableString: string) {
   });
 }
 
-export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }) {
+export function AssessmentReportForm({ onComplete }: { onComplete?: (assessment: AssessmentReportData) => void }) {
   const [azureReport, setAzureReport] = useState<File | null>(null)
   const [azureReport1Yr, setAzureReport1Yr] = useState<File | null>(null);
   const [azureReport3Yr, setAzureReport3Yr] = useState<File | null>(null);
@@ -90,6 +119,8 @@ export function AssessmentReportForm({ onComplete }: { onComplete?: () => void }
   const [reportData, setReportData] = useState<AssessmentReportData | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  
+
 
   const azureReportRef = useRef<HTMLInputElement>(null)
   const azureReport1YrRef = useRef<HTMLInputElement>(null)
@@ -756,7 +787,7 @@ ${rulesAndConstraints ? `9. STRICTLY FOLLOW the custom rules and constraints pro
 
       setReportData(assessmentData);
       setShowSuccessMessage(true);
-      if (onComplete) onComplete();
+      if (onComplete) onComplete(assessmentData);
       
       console.log("✅ [Form Submit] Assessment completed successfully. User can now download report and start new assessment when ready.");
     } catch (err: any) {
@@ -775,6 +806,8 @@ ${rulesAndConstraints ? `9. STRICTLY FOLLOW the custom rules and constraints pro
   useEffect(() => {
     console.log("🔄 [Form Reset] Form reset triggered.");
   }, []);
+
+
 
   return (
     <>
@@ -935,55 +968,84 @@ IMPORTANT: For disk constraints, be very specific:
           )}
 
           {reportData && (
-            <Button 
-              type="button" 
-              className="w-full bg-green-600 hover:bg-green-700 mt-4"
-              onClick={async () => {
-                try {
-                  // Create FormData to send both report data and template file
-                  const formData = new FormData();
-                  formData.append('reportData', JSON.stringify(reportData));
-                  
-                  if (templateFile) {
-                    formData.append('templateFile', templateFile);
-                  }
-                  
-                  console.log('💿 [Frontend] Sending report generation request:', {
-                    hasTemplate: !!templateFile,
-                    reportDataKeys: Object.keys(reportData),
-                    diskData: reportData.payAsYouGoData?.disks?.length || 0
-                  });
-                  
-                  const response = await fetch('/api/generate-report', {
-                    method: 'POST',
-                    body: formData,
-                  });
-                  
-                  if (!response.ok) throw new Error('Failed to generate report');
-                  
-                  const blob = await response.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.download = 'assessment-report.docx';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  window.URL.revokeObjectURL(url);
-                } catch (error) {
-                  console.error('Error downloading report:', error);
-                  alert('Failed to download report');
-                }
-              }}
-            >
-              Download Word Report
-            </Button>
+            <div className="space-y-6">
+              {/* Step 1: Report Download Section */}
+              <Card className="border-green-200 bg-green-50/30">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded-full text-sm font-bold">
+                      1
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-green-600" />
+                        Download Assessment Report
+                      </CardTitle>
+                      <CardDescription>
+                        First, download your complete assessment report as a Word document with all analysis and recommendations.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Button 
+                    type="button" 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={async () => {
+                      try {
+                        // Create FormData to send both report data and template file
+                        const formData = new FormData();
+                        formData.append('reportData', JSON.stringify(reportData));
+                        
+                        if (templateFile) {
+                          formData.append('templateFile', templateFile);
+                        }
+                        
+                        console.log('💿 [Frontend] Sending report generation request:', {
+                          hasTemplate: !!templateFile,
+                          reportDataKeys: Object.keys(reportData),
+                          diskData: reportData.payAsYouGoData?.disks?.length || 0
+                        });
+                        
+                        const response = await fetch('/api/generate-report', {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        
+                        if (!response.ok) throw new Error('Failed to generate report');
+                        
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'assessment-report.docx';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        // Show success message
+                        setShowSuccessMessage(true);
+                      } catch (error) {
+                        console.error('Error downloading report:', error);
+                        alert('Failed to download report');
+                      }
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Download Word Report
+                  </Button>
+                </CardContent>
+              </Card>
+
+
+            </div>
           )}
         </form>
         {error && <div className="text-red-600 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">{error}</div>}
         {showSuccessMessage && (
           <div className="text-green-600 mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            ✅ Assessment completed successfully! You can now download your report and start a new assessment when ready.
+            ✅ Assessment completed successfully! Please download your report. You can view architecture diagrams in the dashboard below.
             {isResetting && (
               <div className="mt-2 text-sm text-green-700">
                 🔄 Resetting form...

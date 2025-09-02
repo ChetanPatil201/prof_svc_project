@@ -146,6 +146,47 @@ export interface AssessmentSummary {
   // Add more fields as needed from Assessment_Summary
 }
 
+export interface ArchitectureAssessmentSummary {
+  workloads: {
+    totalVMs: number;
+    windowsVMs: number;
+    linuxVMs: number;
+    totalCores: number;
+    totalMemoryGB: number;
+    totalStorageGB: number;
+    averageCpuUsage: number;
+    averageMemoryUsage: number;
+  };
+  networking: {
+    totalNetworkAdapters: number;
+    averageNetworkInMbps: number;
+    averageNetworkOutMbps: number;
+    uniqueIPRanges: number;
+  };
+  securityRisks: {
+    machinesWithIssues: number;
+    securityReadinessIssues: number;
+    dataCollectionIssues: number;
+  };
+  storage: {
+    totalDisks: number;
+    premiumDisks: number;
+    standardDisks: number;
+    totalStorageCost: number;
+  };
+  costs: {
+    compute: number;
+    storage: number;
+    security: number;
+    total: number;
+  };
+  recommendations: {
+    migrationStrategy: string;
+    networkSegmentation: string;
+    securityPriority: string;
+  };
+}
+
 export interface AssessmentReportSummary {
   totalMachines: number;
   totalCosts: {

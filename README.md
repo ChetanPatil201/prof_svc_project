@@ -1,171 +1,291 @@
 # Professional Services Assessment Tool
 
-A comprehensive Azure migration assessment tool that helps organizations analyze their on-premises infrastructure and generate detailed migration reports with cost optimization recommendations.
+A Next.js 15 application for generating comprehensive Azure migration assessment reports and architecture diagrams using AI.
 
 ## Features
 
-### 🎯 Core Assessment Capabilities
-- **Azure Migrate Integration**: Process Azure Migrate assessment data
-- **VM Size Recommendations**: AI-powered VM sizing recommendations
-- **Cost Analysis**: Detailed cost breakdowns with multiple pricing options
-- **Disk Optimization**: Intelligent disk type recommendations
-- **Report Generation**: Professional Word document reports
+- **Assessment Report Generation**: Upload Azure Migrate data and generate detailed reports
+- **Architecture Diagram Generation**: Create PlantUML diagrams from assessment data
+- **AI-Powered Analysis**: Leverage Azure OpenAI for intelligent recommendations
+- **Cost Optimization**: Analyze and compare pricing options
+- **Migration Planning**: Generate step-by-step migration runbooks
 
-### 🔧 Disk Constraint System
-- **Premium Disk Filtering**: Automatically filter out Premium SSD and Premium SSD V2 disks
-- **Standard SSD Fallback**: Convert premium disks to cost-effective Standard SSD
-- **Flexible Constraints**: Support for various constraint syntaxes
-- **Consistent Application**: Ensure constraints are applied across all report sections
+## API Routes
 
-### 📊 Reporting Features
-- **Cost Comparison Tables**: Pay-as-you-go vs Reserved Instance pricing
-- **Compute Breakdown**: Detailed VM sizing and cost analysis
-- **Storage Analysis**: Disk recommendations with cost optimization
-- **Professional Templates**: Customizable Word document templates
+### Generate Architecture Diagram
 
-## Quick Start
+**Endpoint**: `POST /api/generate-diagram`
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Azure subscription (for pricing data)
+**Description**: Generates a PlantUML architecture diagram blueprint based on Azure Migrate assessment data.
 
-### Installation
-```bash
-# Clone the repository
-git clone <repository-url>
-cd prof-svc-project
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+**Request Body**:
+```json
+{
+  "reportData": {
+    "assessedMachines": [
+      {
+        "machine": "VM-001",
+        "operatingSystem": "Windows Server 2019",
+        "cores": 4,
+        "memoryMb": 8192,
+        "storageGb": 100,
+        "computeMonthlyCostEstimateUsd": 150.00,
+        "securityMonthlyCostEstimateUsd": 25.00,
+        "azureReadinessIssues": "",
+        "securityReadiness": "Ready",
+        "dataCollectionIssues": "",
+        "networkAdapters": "2",
+        "ipAddress": "192.168.1.10",
+        "networkInMbps": 100,
+        "networkOutMbps": 50
+      }
+    ],
+    "assessedDisks": [
+      {
+        "machine": "VM-001",
+        "diskName": "Disk-001",
+        "recommendedDiskType": "Premium SSD",
+        "monthlyCostEstimate": 25.00,
+        "sourceDiskSizeGb": 100,
+        "targetDiskSizeGb": 100
+      }
+    ]
+  }
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to access the application.
-
-## Disk Constraints Usage
-
-### Basic Constraints
-```typescript
-// Filter out premium disks
-"Dont choose premium disks"
-
-// Filter out premium v2 disks
-"Dont choose premium v2 disks"
-
-// Filter both types
-"Dont choose premium disks or premium v2 disks"
+**Response**:
+```json
+{
+  "success": true,
+  "blueprint": "@startuml\n!theme plain\n... PlantUML diagram code ...\n@enduml",
+  "processingTime": 2450,
+  "summary": {
+    "totalVMs": 5,
+    "totalCost": 650.00,
+    "migrationStrategy": "Lift and Shift"
+  }
+}
 ```
 
-### Advanced Constraints
-```typescript
-// Comprehensive premium filtering
-"Dont select any type of premium disk"
-
-// Ultra disk filtering
-"Dont choose ultra disks"
-
-// Standard disk preferences
-"Prefer standard ssd"
+**Error Response**:
+```json
+{
+  "success": false,
+  "error": "Error message describing the issue",
+  "processingTime": 1200
+}
 ```
 
-### Example Workflow
-1. Upload Azure Migrate assessment data
-2. Specify disk constraints in the assessment form
-3. Generate comprehensive migration report
-4. Review cost-optimized recommendations
+**Features**:
+- Analyzes workload distribution (Windows vs Linux VMs)
+- Calculates total compute, storage, and security costs
+- Assesses networking requirements and security risks
+- Generates CAF-aligned Azure Landing Zone diagrams
+- Uses PlantUML format for easy visualization
+- Configurable diagram generation options
+- Built-in validation for PlantUML code
+- Support for custom styling and themes
+- **Enhanced Error Handling**: Comprehensive error handling with retry logic
+- **Retry Mechanism**: Up to 2 retries with exponential backoff for Azure OpenAI failures
+- **Input Validation**: Robust validation of report data structure
+- **Performance Monitoring**: Processing time tracking and detailed logging
+- **Status Codes**: Proper HTTP status codes (200, 400, 422, 500, 503)
 
-## Documentation
+## React Components
 
-### 📚 Technical Guides
-- **[Disk Constraints Guide](DISK_CONSTRAINTS_GUIDE.md)** - Comprehensive technical documentation for the disk constraint system
-- **[Docker Deployment Guide](DOCKER_DEPLOYMENT.md)** - Deployment instructions and disk constraint overview
-- **[Azure Deployment Guide](AZURE_DEPLOYMENT_GUIDE.md)** - Azure-specific deployment instructions
+### ArchitectureDiagramViewer
 
-### 🔧 API Documentation
-- **VM Recommendations**: `/api/vm-recommendation`
-- **Report Generation**: `/api/generate-report`
-- **Azure OpenAI Integration**: `/api/azure-openai`
+A comprehensive React component for displaying Azure architecture diagrams generated from assessment data.
 
-## Architecture
+**Features**:
+- **Automatic Diagram Generation**: Fetches diagrams from the API endpoint
+- **PlantUML Integration**: Converts PlantUML code to images using PlantUML web service
+- **Interactive Controls**: Zoom in/out, fullscreen mode, download functionality
+- **Loading States**: Animated loading indicators during diagram generation
+- **Error Handling**: Comprehensive error handling with retry mechanisms
+- **Responsive Design**: Works on desktop and mobile devices
+- **Summary Information**: Displays VM count, costs, and migration strategy
 
-### Core Components
+**Basic Usage**:
+```tsx
+import ArchitectureDiagramViewer from '@/components/ArchitectureDiagramViewer';
+
+function MyComponent() {
+  const reportData = {
+    assessedMachines: [...],
+    assessedDisks: [...]
+  };
+
+  return (
+    <ArchitectureDiagramViewer
+      reportData={reportData}
+      title="My Architecture Diagram"
+      description="Generated from assessment data"
+    />
+  );
+}
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   └── dashboard/         # Dashboard pages
-├── components/            # React components
-├── lib/                   # Utility functions
-│   ├── utils.ts          # Disk constraint system
-│   ├── azureVmAnalysis.ts # VM analysis logic
-│   └── azureOpenAI.ts    # OpenAI integration
-└── types/                # TypeScript interfaces
+
+**Advanced Usage with Callbacks**:
+```tsx
+function MyComponent() {
+  const handleDiagramGenerated = (response) => {
+    console.log('Diagram generated:', response);
+  };
+
+  const handleError = (error) => {
+    console.error('Error:', error);
+  };
+
+  return (
+    <ArchitectureDiagramViewer
+      reportData={reportData}
+      onDiagramGenerated={handleDiagramGenerated}
+      onError={handleError}
+      autoGenerate={true}
+    />
+  );
+}
 ```
 
-### Disk Constraint System
-- **Constraint Application**: `applyDiskConstraints()`
-- **Data Consistency**: `getConstrainedDiskData()`
-- **Testing Framework**: `testDiskConstraintApplication()`
+**Props**:
+- `reportData`: Azure Migrate assessment data
+- `reportId`: Alternative to reportData for fetching by ID
+- `title`: Diagram card title
+- `description`: Diagram card description
+- `className`: Custom CSS classes
+- `autoGenerate`: Whether to auto-generate on mount
+- `onDiagramGenerated`: Success callback function
+- `onError`: Error callback function
 
-## Recent Updates
+**User Interactions**:
+- **Zoom Controls**: Zoom in/out with percentage display
+- **Fullscreen Mode**: Toggle fullscreen view
+- **Download**: Save diagram as PNG image
+- **Regenerate**: Manually trigger diagram generation
+- **Control Visibility**: Toggle zoom controls on/off
 
-### ✅ Fixed Issues
-- **Inconsistent Constraint Application**: Fixed issue where only 2 out of 7 premium disks were being filtered
-- **Data Inconsistency**: Ensured constraints are applied consistently across all report sections
-- **Debug Logging**: Added comprehensive logging for constraint application tracking
+## Environment Variables
 
-### 🔧 Technical Improvements
-- Enhanced constraint detection logic
-- Improved error handling and fallback mechanisms
-- Added comprehensive testing framework
-- Optimized API integration
+Required for Azure OpenAI integration:
+
+```env
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+```
 
 ## Development
 
-### Testing
 ```bash
-# Run constraint tests
-npm run test:constraints
+# Install dependencies
+npm install
 
-# Run full test suite
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
 npm test
 ```
 
-### Debug Logging
-The system provides comprehensive logging for troubleshooting:
+## Project Structure
+
 ```
-🧪 [Disk Test] Testing disk constraint application
-🔄 [Disk Consistency] Applying constraints to all disk data
-✅ [Disk Test] Constraints successfully reduced premium disk count
-```
-
-### Code Quality
-- TypeScript for type safety
-- ESLint for code quality
-- Prettier for code formatting
-- Comprehensive error handling
-
-## Deployment
-
-### Docker Deployment
-```bash
-# Build and run with Docker
-docker-compose up -d
-
-# Or use the deployment script
-./deploy-to-azure.sh
+src/
+├── app/
+│   ├── api/
+│   │   ├── generate-diagram/     # Architecture diagram generation
+│   │   ├── azure-openai/        # Azure OpenAI integration
+│   │   └── ...                  # Other API routes
+│   ├── dashboard/               # Main dashboard pages
+│   └── ...                      # Other app pages
+├── components/                  # Reusable UI components
+├── lib/                        # Utility functions and integrations
+│   ├── generateDiagramBlueprint.ts  # PlantUML diagram generation utility
+│   ├── azureOpenAI.ts          # Azure OpenAI client
+│   └── ...                     # Other utilities
+├── types/                      # TypeScript type definitions
+└── public/                     # Static assets
 ```
 
-### Azure Deployment
-```bash
-# Deploy to Azure Container Instances
-./aci-deploy.sh
+## Usage Examples
 
-# Or use GitHub Actions
-# See .github/workflows/azure-deploy.yml
+### Generate Architecture Diagram
+
+#### Using the API Route
+```typescript
+const response = await fetch('/api/generate-diagram', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    reportData: {
+      assessedMachines: [...],
+      assessedDisks: [...]
+    }
+  })
+});
+
+const result = await response.json();
+
+if (result.success) {
+  console.log(`✅ Diagram generated in ${result.processingTime}ms`);
+  console.log(`📊 Summary: ${result.summary.totalVMs} VMs, $${result.summary.totalCost}/month`);
+  // Use the PlantUML blueprint to render the diagram
+  const plantUmlCode = result.blueprint;
+} else {
+  console.error(`❌ Error: ${result.error}`);
+}
+
+#### Using the Utility Function Directly
+```typescript
+import { generateDiagramBlueprint, type AssessmentSummary } from '@/lib/generateDiagramBlueprint';
+
+const assessmentSummary: AssessmentSummary = {
+  workloads: {
+    totalVMs: 5,
+    windowsVMs: 3,
+    linuxVMs: 2,
+    totalCores: 16,
+    totalMemoryGB: 64,
+    totalStorageGB: 500,
+    averageCpuUsage: 45,
+    averageMemoryUsage: 60
+  },
+  networking: {
+    totalNetworkAdapters: 8,
+    averageNetworkInMbps: 75,
+    averageNetworkOutMbps: 40,
+    uniqueIPRanges: 2
+  },
+  securityRisks: {
+    machinesWithIssues: 1,
+    securityReadinessIssues: 1,
+    dataCollectionIssues: 0
+  },
+  costEstimates: {
+    compute: 450.00,
+    storage: 125.00,
+    security: 75.00,
+    total: 650.00
+  },
+  recommendations: {
+    migrationStrategy: 'Lift and Shift',
+    networkSegmentation: 'Multi-subnet',
+    securityPriority: 'High'
+  }
+};
+
+const plantUmlCode = await generateDiagramBlueprint(assessmentSummary, {
+  maxTokens: 3000,
+  temperature: 0.2,
+  includeSecurityGroups: true
+});
 ```
 
 ## Contributing
@@ -173,16 +293,9 @@ docker-compose up -d
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
+4. Add tests if applicable
 5. Submit a pull request
-
-## Support
-
-For technical support or questions about the disk constraint system:
-- Check the [Disk Constraints Guide](DISK_CONSTRAINTS_GUIDE.md)
-- Review the debug logs for troubleshooting
-- Open an issue for bugs or feature requests
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.

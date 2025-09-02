@@ -1,0 +1,30 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="28" fill="#FF6B35" stroke="#E55A2B" stroke-width="2"/>
+  
+  <!-- Magnifying glass -->
+  <circle cx="24" cy="24" r="10" fill="none" stroke="white" stroke-width="3"/>
+  <path d="M32 32L44 44" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Brain/AI elements -->
+  <path d="M40 20C40 18 42 16 44 16C46 16 48 18 48 20C48 22 46 24 44 24C42 24 40 22 40 20Z" fill="white" opacity="0.9"/>
+  <path d="M44 28C44 26 46 24 48 24C50 24 52 26 52 28C52 30 50 32 48 32C46 32 44 30 44 28Z" fill="white" opacity="0.9"/>
+  
+  <!-- Neural connections -->
+  <path d="M44 24L48 24" stroke="white" stroke-width="2" opacity="0.7"/>
+  <path d="M46 20L46 28" stroke="white" stroke-width="2" opacity="0.7"/>
+  
+  <!-- AI nodes -->
+  <circle cx="44" cy="20" r="2" fill="#FFD700"/>
+  <circle cx="48" cy="24" r="2" fill="#FFD700"/>
+  <circle cx="44" cy="28" r="2" fill="#FFD700"/>
+  <circle cx="46" cy="24" r="3" fill="#FFD700"/>
+  
+  <!-- Search results indicator -->
+  <circle cx="20" cy="40" r="3" fill="white" opacity="0.8"/>
+  <circle cx="28" cy="44" r="3" fill="white" opacity="0.8"/>
+  <circle cx="36" cy="40" r="3" fill="white" opacity="0.8"/>
+  
+  <!-- Connection lines -->
+  <path d="M20 40L28 44L36 40" stroke="white" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+</svg>

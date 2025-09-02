@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { AssessmentReportData } from '@/types/assessmentReport';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
-import { generateCostComparisonTable, generateCostComparisonTableData, generateComputeBreakdownData, generateDiskBreakdownData, getConstrainedDiskData, testDiskConstraintApplication } from '@/lib/utils';
+import { generateCostComparisonTable, generateCostComparisonTableData, generateComputeBreakdownData, generateDiskBreakdownData, getConstrainedDiskData } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,12 +19,10 @@ export async function POST(req: NextRequest) {
     
     const data: AssessmentReportData = JSON.parse(reportDataJson);
 
-    // Test disk constraint application
-    await testDiskConstraintApplication(data);
+
 
     // Apply disk constraints to original data for consistency across all report sections
     if (data.rulesAndConstraints && data.payAsYouGoData?.disks && data.targetRegion) {
-      console.log("🔄 [Generate Report] Ensuring disk constraints are applied consistently");
       data.payAsYouGoData.disks = await getConstrainedDiskData(data);
     }
 
